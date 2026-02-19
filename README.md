@@ -85,6 +85,12 @@ This book is released under [CC0 1.0 Universal](LICENSE) — public domain. Take
 
 ---
 
+## Acknowledgements
+
+Thank you to **Georgiy Treyvus** for coming up with the idea for this book.
+
+---
+
 ## The CloudStreet Series
 
 This book is part of the CloudStreet series of technical books at [github.com/cloudstreet-dev](https://github.com/cloudstreet-dev). The series covers practical Ruby, web fundamentals, and the kind of knowledge that makes you genuinely better rather than just more familiar with a particular framework's DSL.

@@ -73,4 +73,8 @@ Every code example in this book runs. If an example requires a gem, it says so. 
 
 The simplest Rack application in this book is nine lines. The server we build from scratch is about a hundred. Neither of these is a toy, even though neither is production-ready. They're instructive, which is more useful.
 
+## Acknowledgements
+
+Thanks to **Georgiy Treyvus** for coming up with the idea for this book.
+
 Let's start by talking about what's actually happening on the wire.
