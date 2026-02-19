@@ -1,0 +1,2495 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Rack, Roda, and Ruby</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Rails is just a callable. Sinatra is just a callable. So is Roda. This book strips away the magic of Ruby web development, shows you exactly what Rack is doing under the hood, and teaches you to build from first principles. Know your tools. Really know them.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rack, Roda, and Ruby</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="the-lie-youve-been-living"><a class="header" href="#the-lie-youve-been-living">The Lie You've Been Living</a></h1>
+<p>Let's start with a confession: Rails is a callable.</p>
+<p>Not metaphorically. Not "if you squint at it." Literally, mechanically, by definition — Rails is an object that responds to <code>call</code>. You pass it a hash, it returns an array. That's the whole thing. The routing DSL, the ActiveRecord integration, the asset pipeline, the mailers — all of it exists so that one <code>call</code> method can do something useful.</p>
+<p>Here's the proof:</p>
+<pre><code class="language-ruby"># config/environment.rb loads your Rails app
+require_relative '../config/environment'
+
+# This is your entire Rails application
+app = Rails.application
+
+# It responds to call
+app.respond_to?(:call) # =&gt; true
+
+# Call it directly with a minimal Rack environment
+env = {
+  'REQUEST_METHOD' =&gt; 'GET',
+  'PATH_INFO'      =&gt; '/',
+  'rack.input'     =&gt; StringIO.new,
+  'SERVER_NAME'    =&gt; 'localhost',
+  'SERVER_PORT'    =&gt; '3000',
+  'HTTP_VERSION'   =&gt; 'HTTP/1.1',
+}
+
+status, headers, body = app.call(env)
+
+puts status   # 200
+puts headers  # {"Content-Type" =&gt; "text/html; charset=utf-8", ...}
+body.each { |chunk| print chunk } # your HTML
+</code></pre>
+<p>Run that in a Rails console. It works. No HTTP required, no browser, no WEBrick. Just a hash in and an array out.</p>
+<p>This is not a party trick. This is the entire basis of Ruby web development, and understanding it changes how you read framework code, debug middleware issues, and make architectural decisions.</p>
+<h2 id="why-this-matters"><a class="header" href="#why-this-matters">Why This Matters</a></h2>
+<p>You've probably been writing Ruby web applications for a while. You know how to define routes, render templates, write controllers, handle authentication. You're productive. The framework handles the HTTP layer and you work at the application layer, which is exactly the correct division of labor in production.</p>
+<p>The problem is that "the framework handles it" is a sentence that stops you from understanding what's actually happening. When something breaks in a way that the framework's error messages don't explain clearly, you're stuck. When you need to write middleware, you're cargo-culting examples. When you're evaluating whether to use Sinatra or Roda or some other non-Rails framework, you're guessing.</p>
+<p>The Rack specification — which is what makes all of this work — is simple enough to explain completely in one chapter. The HTTP protocol that sits beneath it is simple enough to understand in an afternoon. Once you understand both, the entire ecosystem of Ruby web frameworks becomes readable rather than mysterious.</p>
+<h2 id="what-this-book-is"><a class="header" href="#what-this-book-is">What This Book Is</a></h2>
+<p>This book is about three things:</p>
+<ol>
+<li>
+<p><strong>Rack</strong>: The protocol that unifies Ruby web development. We'll read the spec, build apps against it directly, write our own server, and implement middleware from scratch.</p>
+</li>
+<li>
+<p><strong>Roda</strong>: A web framework that takes Rack seriously. Where Rails uses Rack as a compatibility layer (something your application sits on top of), Roda uses Rack as a foundation (something your application is built out of). The distinction matters.</p>
+</li>
+<li>
+<p><strong>The gap between them</strong>: What frameworks actually add, why those additions exist, and when you want them versus when you don't.</p>
+</li>
+</ol>
+<h2 id="what-this-book-is-not"><a class="header" href="#what-this-book-is-not">What This Book Is Not</a></h2>
+<p>This is not a Rails tutorial, a Sinatra tutorial, or a Roda tutorial in the conventional sense. There are plenty of those. This is a book about the layer beneath those frameworks, with enough framework coverage to make the comparison meaningful.</p>
+<p>This is also not a "write everything from scratch" manifesto. Frameworks exist because they solve real problems, and Roda is genuinely excellent at what it does. The goal isn't to convince you to abandon your tools; it's to make you fluent enough in the underlying mechanics that you can use your tools with full understanding of what they're doing.</p>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<p>You should know Ruby reasonably well — blocks, modules, objects, the basics of metaprogramming. You should have written at least one web application in Ruby, probably with Rails or Sinatra. You should be comfortable at the command line.</p>
+<p>You do not need to know anything about Rack, Roda, or HTTP internals. We'll cover all of that.</p>
+<h2 id="a-note-on-the-code"><a class="header" href="#a-note-on-the-code">A Note on the Code</a></h2>
+<p>Every code example in this book runs. If an example requires a gem, it says so. If it requires Ruby 3.x, it says so. The examples are not simplified pseudocode — they're actual Ruby that does actual things.</p>
+<p>The simplest Rack application in this book is nine lines. The server we build from scratch is about a hundred. Neither of these is a toy, even though neither is production-ready. They're instructive, which is more useful.</p>
+<p>Let's start by talking about what's actually happening on the wire.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="http-is-just-text"><a class="header" href="#http-is-just-text">HTTP Is Just Text</a></h1>
+<p>Before we talk about Rack, before we talk about Ruby, we need to talk about what's actually going on between the browser and your application. Because once you see it, you can't unsee it, and everything you've been doing will make more sense.</p>
+<p>Open a terminal. We're going to make an HTTP request without a browser, without a library, without anything except <code>nc</code> (netcat) and our fingers.</p>
+<h2 id="the-actual-wire"><a class="header" href="#the-actual-wire">The Actual Wire</a></h2>
+<pre><code class="language-bash">$ printf "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" | nc example.com 80
+</code></pre>
+<p>You'll see something like:</p>
+<pre><code>HTTP/1.1 200 OK
+Content-Encoding: gzip
+Accept-Ranges: bytes
+Age: 604476
+Cache-Control: max-age=604800
+Content-Type: text/html; charset=UTF-8
+Date: Mon, 19 Feb 2026 12:00:00 GMT
+Etag: "3147526947+gzip"
+Expires: Mon, 26 Feb 2026 12:00:00 GMT
+Last-Modified: Thu, 17 Oct 2019 07:18:26 GMT
+Server: ECS (nyb/1D2E)
+Vary: Accept-Encoding
+X-Cache: HIT
+Content-Length: 648
+
+&lt;!doctype html&gt;
+...
+</code></pre>
+<p>That's it. That's HTTP. Text goes in, text comes out. The format is rigid but the transport is a TCP socket, which is just a reliable stream of bytes. HTTP doesn't care that those bytes happen to be ASCII text. The convention is that they are.</p>
+<h2 id="the-request-format"><a class="header" href="#the-request-format">The Request Format</a></h2>
+<p>An HTTP/1.1 request looks like this:</p>
+<pre><code>METHOD /path HTTP/1.1\r\n
+Header-Name: header value\r\n
+Another-Header: its value\r\n
+\r\n
+optional body here
+</code></pre>
+<p>The parts:</p>
+<ul>
+<li><strong>Request line</strong>: <code>METHOD PATH HTTP-VERSION</code> — all on one line, <code>\r\n</code> terminated</li>
+<li><strong>Headers</strong>: <code>Name: Value</code> pairs, one per line, <code>\r\n</code> terminated</li>
+<li><strong>Blank line</strong>: A <code>\r\n</code> on its own signals end of headers</li>
+<li><strong>Body</strong>: Optional. Present for POST/PUT, usually absent for GET. Length is specified in <code>Content-Length</code>.</li>
+</ul>
+<p>Let's build one by hand:</p>
+<pre><code class="language-ruby">require 'socket'
+
+# Open a TCP connection
+socket = TCPSocket.new('httpbin.org', 80)
+
+# Write a valid HTTP/1.1 request
+request = [
+  "GET /get HTTP/1.1",
+  "Host: httpbin.org",
+  "Accept: application/json",
+  "Connection: close",
+  "",  # blank line = end of headers
+  ""   # body (empty)
+].join("\r\n")
+
+socket.write(request)
+
+# Read the response
+response = socket.read
+socket.close
+
+puts response
+</code></pre>
+<p>Run that. You'll get back a real HTTP response with JSON body. No gems, no frameworks. Just a TCP socket and text.</p>
+<h2 id="the-response-format"><a class="header" href="#the-response-format">The Response Format</a></h2>
+<p>The response format mirrors the request:</p>
+<pre><code>HTTP/1.1 STATUS_CODE REASON_PHRASE\r\n
+Header-Name: header value\r\n
+Another-Header: its value\r\n
+\r\n
+body content here
+</code></pre>
+<p>The status line is <code>HTTP-VERSION STATUS-CODE REASON-PHRASE</code>. The status code is what you check in your application code and what browsers act on. The reason phrase ("OK", "Not Found", "Internal Server Error") is informational and largely ignored by machines.</p>
+<pre><code class="language-ruby"># Parse an HTTP response by hand
+response_text = &lt;&lt;~HTTP
+  HTTP/1.1 200 OK\r
+  Content-Type: text/plain\r
+  Content-Length: 13\r
+  \r
+  Hello, World!
+HTTP
+
+lines = response_text.split("\r\n")
+
+# First line is the status line
+status_line = lines.shift
+version, code, *reason = status_line.split(' ')
+status_code = code.to_i
+
+puts "Version: #{version}"  # HTTP/1.1
+puts "Status:  #{status_code}"  # 200
+puts "Reason:  #{reason.join(' ')}"  # OK
+
+# Headers follow until the blank line
+headers = {}
+while (line = lines.shift) &amp;&amp; !line.empty?
+  name, value = line.split(': ', 2)
+  headers[name] = value
+end
+
+puts "Headers: #{headers.inspect}"
+# {"Content-Type" =&gt; "text/plain", "Content-Length" =&gt; "13"}
+
+# Rest is body
+body = lines.join("\r\n")
+puts "Body: #{body}"  # Hello, World!
+</code></pre>
+<h2 id="what-servers-actually-do"><a class="header" href="#what-servers-actually-do">What Servers Actually Do</a></h2>
+<p>A web server's job, stripped to its core:</p>
+<ol>
+<li>Listen on a TCP port (usually 80 or 443)</li>
+<li>Accept a connection</li>
+<li>Read bytes until you have a complete HTTP request</li>
+<li>Parse the request into a structured format</li>
+<li>Do something with it (your application code runs here)</li>
+<li>Format the response back into HTTP text</li>
+<li>Write it to the socket</li>
+<li>Close the connection (or keep it open for HTTP/1.1 keep-alive)</li>
+</ol>
+<p>Step 5 is the only step that varies between applications. Steps 1-4 and 6-8 are the same for every web application ever written. Rack is what formalizes the handoff at step 5.</p>
+<h2 id="what-headers-are-actually-doing"><a class="header" href="#what-headers-are-actually-doing">What Headers Are Actually Doing</a></h2>
+<p>Headers are metadata about the request or response. Nothing more. They're just key-value pairs that tell the other side how to interpret what it's receiving.</p>
+<p>Some important ones:</p>
+<p><strong>Request headers you should know:</strong></p>
+<ul>
+<li><code>Host</code> — which domain the client wants (required in HTTP/1.1, because one IP can serve many domains)</li>
+<li><code>Accept</code> — what content types the client can handle</li>
+<li><code>Content-Type</code> — what format the request body is in (important for POST)</li>
+<li><code>Content-Length</code> — how many bytes in the body</li>
+<li><code>Cookie</code> — cookies, serialized as <code>name=value; name2=value2</code></li>
+<li><code>Authorization</code> — authentication credentials</li>
+</ul>
+<p><strong>Response headers you should know:</strong></p>
+<ul>
+<li><code>Content-Type</code> — what format the body is in, e.g. <code>text/html; charset=utf-8</code></li>
+<li><code>Content-Length</code> — how many bytes in the body (so the client knows when it's done)</li>
+<li><code>Set-Cookie</code> — asks the client to store a cookie</li>
+<li><code>Location</code> — used with 301/302 redirects to specify where to go</li>
+<li><code>Cache-Control</code> — caching instructions</li>
+</ul>
+<p>Your framework sets most of these for you. But it's worth knowing they're just text in a predictable format.</p>
+<h2 id="post-bodies"><a class="header" href="#post-bodies">POST Bodies</a></h2>
+<p>When you submit a form, the browser sends a POST request with the form data in the body. The format depends on the <code>Content-Type</code> header:</p>
+<p><strong><code>application/x-www-form-urlencoded</code></strong> (the default):</p>
+<pre><code>name=Alice&amp;age=30&amp;city=Auckland
+</code></pre>
+<p><strong><code>multipart/form-data</code></strong> (for file uploads):</p>
+<pre><code>--boundary123
+Content-Disposition: form-data; name="name"
+
+Alice
+--boundary123
+Content-Disposition: form-data; name="file"; filename="photo.jpg"
+Content-Type: image/jpeg
+
+[binary file data here]
+--boundary123--
+</code></pre>
+<p><strong><code>application/json</code></strong> (for API clients):</p>
+<pre><code class="language-json">{"name": "Alice", "age": 30, "city": "Auckland"}
+</code></pre>
+<p>When Rails gives you <code>params[:name]</code>, it has parsed one of these formats. When it fails in production with a cryptic body-parsing error, now you know where to look.</p>
+<h2 id="the-moment-where-it-clicks"><a class="header" href="#the-moment-where-it-clicks">The Moment Where It Clicks</a></h2>
+<p>Here's the thing: HTTP is a protocol designed in 1991 and finalized in 1996. It was designed by people who expected it to be implemented in C and read by humans for debugging. The fact that it's text is a feature, not a coincidence.</p>
+<p>This is why you can debug HTTP with <code>nc</code>, with <code>curl -v</code>, with browser DevTools. This is why log lines make sense. This is why you can write a minimal HTTP server in a hundred lines of Ruby (we will).</p>
+<p>HTTP/2 and HTTP/3 are binary protocols, which is why you can't <code>nc</code> them as easily. But HTTP/1.1 is still everywhere, and Rack was designed around it.</p>
+<h2 id="putting-it-together-a-minimal-http-interaction-in-ruby"><a class="header" href="#putting-it-together-a-minimal-http-interaction-in-ruby">Putting It Together: A Minimal HTTP Interaction in Ruby</a></h2>
+<pre><code class="language-ruby">require 'socket'
+
+# Server side: accept one request and respond
+server = TCPServer.new(2345)
+puts "Listening on :2345"
+
+Thread.new do
+  client = server.accept
+
+  # Read the request line
+  request_line = client.gets
+  puts "Got: #{request_line.chomp}"
+
+  # Read headers until blank line
+  headers = {}
+  while (line = client.gets.chomp) &amp;&amp; !line.empty?
+    name, value = line.split(': ', 2)
+    headers[name] = value
+  end
+
+  # Build a response
+  body = "Hello from a real HTTP server!\n"
+  response = [
+    "HTTP/1.1 200 OK",
+    "Content-Type: text/plain",
+    "Content-Length: #{body.bytesize}",
+    "Connection: close",
+    "",
+    body
+  ].join("\r\n")
+
+  client.write(response)
+  client.close
+  server.close
+end
+
+# Client side: make a request
+sleep(0.1) # give server a moment to start
+
+require 'socket'
+socket = TCPSocket.new('localhost', 2345)
+socket.write("GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+puts socket.read
+socket.close
+</code></pre>
+<p>Save that as <code>http_demo.rb</code> and run it:</p>
+<pre><code class="language-bash">$ ruby http_demo.rb
+Listening on :2345
+Got: GET / HTTP/1.1
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Content-Length: 31
+Connection: close
+
+Hello from a real HTTP server!
+</code></pre>
+<p>You just wrote an HTTP server and client from scratch. It handles exactly one request. It has no routing. It ignores the path. But it speaks valid HTTP and it works. Everything that comes after this chapter — Rack, Roda, Rails — is elaborating on this foundation.</p>
+<p>The next question is: how do you plug your Ruby code into this in a standardized way, so that your code can run on any HTTP server, and any HTTP server can run your code? That's what Rack solves.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="what-rails-and-sinatra-are-actually-doing"><a class="header" href="#what-rails-and-sinatra-are-actually-doing">What Rails and Sinatra Are Actually Doing</a></h1>
+<p>Now that you know HTTP is text, let's talk about what happens between "the server receives bytes" and "your route handler runs." This is the part that frameworks describe as magic. It isn't.</p>
+<h2 id="the-stack"><a class="header" href="#the-stack">The Stack</a></h2>
+<p>When an HTTP request hits a Rails or Sinatra application, it passes through several layers before your code sees it:</p>
+<ol>
+<li>The HTTP server (Puma, WEBrick, Unicorn) accepts a TCP connection and parses raw HTTP text into a structured Ruby hash.</li>
+<li>That hash gets passed through Rack middleware — a chain of objects that can inspect, modify, or halt the request before it reaches your application.</li>
+<li>Your application receives the (possibly modified) hash, runs your route handler, and returns a status code, headers, and body.</li>
+<li>The response travels back up through the middleware chain.</li>
+<li>The server serializes the response into HTTP text and writes it to the socket.</li>
+</ol>
+<p>You control step 3. Rack owns step 2. The server owns steps 1, 4, and 5.</p>
+<p>Here's the thing: steps 1 and 3 are what vary between server choices and framework choices. Steps 2 and 4 — the middleware chain — use the same protocol regardless of whether you're using Rails, Sinatra, Roda, or a handwritten Rack app.</p>
+<h2 id="lets-look-at-rails"><a class="header" href="#lets-look-at-rails">Let's Look at Rails</a></h2>
+<pre><code class="language-ruby"># Gemfile
+gem 'rails'
+
+# config.ru (every Rails app has this)
+require_relative 'config/environment'
+run Rails.application
+</code></pre>
+<p>That <code>run Rails.application</code> line is the whole story. <code>run</code> is a Rack method that calls your object's <code>call</code> method for every request. <code>Rails.application</code> is a callable.</p>
+<p>We can inspect what Rails actually does:</p>
+<pre><code class="language-ruby"># In a Rails console
+middleware_stack = Rails.application.middleware
+
+middleware_stack.each do |middleware|
+  puts middleware.inspect
+end
+</code></pre>
+<p>You'll see something like:</p>
+<pre><code>#&lt;ActionDispatch::HostAuthorization ...&gt;
+#&lt;Rack::Sendfile ...&gt;
+#&lt;ActionDispatch::Static ...&gt;
+#&lt;ActionDispatch::Executor ...&gt;
+#&lt;ActiveSupport::Cache::Strategy::LocalCache::Middleware ...&gt;
+#&lt;Rack::Runtime ...&gt;
+#&lt;Rack::MethodOverride ...&gt;
+#&lt;ActionDispatch::RequestId ...&gt;
+#&lt;ActionDispatch::RemoteIp ...&gt;
+#&lt;Sprockets::Rails::QuietAssets ...&gt;
+#&lt;Rails::Rack::Logger ...&gt;
+#&lt;ActionDispatch::ShowExceptions ...&gt;
+#&lt;ActionDispatch::DebugExceptions ...&gt;
+#&lt;ActionDispatch::ActionableExceptions ...&gt;
+#&lt;ActionDispatch::Reloader ...&gt;
+#&lt;ActionDispatch::Callbacks ...&gt;
+#&lt;ActiveRecord::Migration::CheckPending ...&gt;
+#&lt;ActionDispatch::Cookies ...&gt;
+#&lt;ActionDispatch::Session::CookieStore ...&gt;
+#&lt;ActionDispatch::Flash ...&gt;
+#&lt;ActionDispatch::ContentSecurityPolicy::Middleware ...&gt;
+#&lt;ActionDispatch::PermissionsPolicy::Middleware ...&gt;
+#&lt;Rack::Head ...&gt;
+#&lt;Rack::ConditionalGet ...&gt;
+#&lt;Rack::ETag ...&gt;
+#&lt;Rack::TempfileReaper ...&gt;
+</code></pre>
+<p>That's over twenty pieces of middleware wrapping your application before a single request reaches your router. Most of them are doing something useful. <code>Rack::MethodOverride</code> is what makes <code>_method=DELETE</code> in form submissions work. <code>ActionDispatch::Session::CookieStore</code> is where sessions come from. <code>Rack::ETag</code> generates ETags for conditional GET responses.</p>
+<p>At the very bottom of that stack is your router, which dispatches to controllers, which call your code. The router is also just a callable.</p>
+<h2 id="lets-look-at-sinatra"><a class="header" href="#lets-look-at-sinatra">Let's Look at Sinatra</a></h2>
+<p>Sinatra is simpler, which makes it easier to see the structure:</p>
+<pre><code class="language-ruby">require 'sinatra/base'
+
+class MyApp &lt; Sinatra::Base
+  get '/' do
+    'Hello, World!'
+  end
+end
+</code></pre>
+<p><code>Sinatra::Base</code> is a Rack application. It has a <code>call</code> method. When you write:</p>
+<pre><code class="language-ruby">get '/' do
+  'Hello, World!'
+end
+</code></pre>
+<p>...you're adding a route to a routing table that lives inside the <code>call</code> method. The <code>call</code> method looks at the env hash, extracts the HTTP method and path, finds a matching route, and calls your block.</p>
+<p>Here's a rough but accurate implementation of what Sinatra's routing core does:</p>
+<pre><code class="language-ruby">class TinySinatra
+  def initialize
+    @routes = {}
+  end
+
+  def get(path, &amp;handler)
+    @routes[['GET', path]] = handler
+  end
+
+  def post(path, &amp;handler)
+    @routes[['POST', path]] = handler
+  end
+
+  def call(env)
+    method = env['REQUEST_METHOD']
+    path   = env['PATH_INFO']
+
+    handler = @routes[[method, path]]
+
+    if handler
+      body = handler.call
+      [200, {'Content-Type' =&gt; 'text/html'}, [body]]
+    else
+      [404, {'Content-Type' =&gt; 'text/plain'}, ['Not Found']]
+    end
+  end
+end
+</code></pre>
+<p>That's not a joke. Sinatra's actual implementation is more sophisticated (regex matching, parameter extraction, before/after filters, error handling, template rendering), but the structure is exactly this: a hash of routes, a <code>call</code> method that looks things up in the hash.</p>
+<p>Let's verify it works:</p>
+<pre><code class="language-ruby">app = TinySinatra.new
+app.get('/') { 'Hello!' }
+app.get('/about') { 'About page.' }
+
+# Simulate what a Rack server does
+env = {
+  'REQUEST_METHOD' =&gt; 'GET',
+  'PATH_INFO'      =&gt; '/',
+  'rack.input'     =&gt; StringIO.new,
+}
+
+status, headers, body = app.call(env)
+puts status    # 200
+puts body      # ["Hello!"]
+
+env['PATH_INFO'] = '/missing'
+status, headers, body = app.call(env)
+puts status    # 404
+</code></pre>
+<h2 id="what-frameworks-actually-add"><a class="header" href="#what-frameworks-actually-add">What Frameworks Actually Add</a></h2>
+<p>Now we can be precise about what you're paying for when you use a framework:</p>
+<p><strong>Rails adds:</strong></p>
+<ul>
+<li>A routing DSL that handles parameters, constraints, and named routes</li>
+<li>Controllers with before/after actions, strong parameters, response helpers</li>
+<li>ActiveRecord (this alone is most of the value proposition)</li>
+<li>View rendering with template engines and layouts</li>
+<li>Asset pipeline</li>
+<li>A massive middleware stack with sensible defaults</li>
+<li>Conventions that allow code generation and eliminate boilerplate</li>
+<li>A very large community and ecosystem</li>
+</ul>
+<p><strong>Sinatra adds:</strong></p>
+<ul>
+<li>A routing DSL (simpler than Rails's)</li>
+<li>Filters (before/after handlers)</li>
+<li>Template rendering</li>
+<li>A small, optional middleware stack</li>
+<li>Much less convention, more flexibility</li>
+</ul>
+<p><strong>What neither adds, because Rack already provides it:</strong></p>
+<ul>
+<li>The protocol for receiving requests and returning responses</li>
+<li>The ability to run on any conforming server</li>
+<li>The middleware interface</li>
+</ul>
+<p>This is why you can swap Puma for Unicorn without changing your application. This is why you can write middleware that works in both Rails and Sinatra apps. This is why a Rack app can be embedded inside a Rails app, and a Rails app can be mounted inside a Rack app. They all speak the same protocol.</p>
+<h2 id="the-middleware-chain-is-composable"><a class="header" href="#the-middleware-chain-is-composable">The Middleware Chain Is Composable</a></h2>
+<p>Here's something you can do in Rails that will make the structure visible:</p>
+<pre><code class="language-ruby"># config/application.rb
+module MyApp
+  class Application &lt; Rails::Application
+    # Add our own middleware at the front of the stack
+    config.middleware.use LoggingMiddleware
+
+    # Add middleware after a specific existing one
+    config.middleware.insert_after ActionDispatch::Flash, CustomMiddleware
+
+    # Remove middleware we don't need
+    config.middleware.delete Rack::Runtime
+  end
+end
+</code></pre>
+<p>And here's a middleware that you could add to Rails, Sinatra, or a bare Rack app without modification:</p>
+<pre><code class="language-ruby">class LoggingMiddleware
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    start = Time.now
+    status, headers, body = @app.call(env)
+    elapsed = Time.now - start
+
+    puts "[#{status}] #{env['REQUEST_METHOD']} #{env['PATH_INFO']} (#{elapsed.round(4)}s)"
+
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>This is not framework-specific code. It's Rack code. It works because both Rails and Sinatra are Rack applications, and this is a Rack middleware.</p>
+<h2 id="the-call-stack"><a class="header" href="#the-call-stack">The Call Stack</a></h2>
+<p>When a request comes in, execution looks like this:</p>
+<pre><code>Server.call(env)
+  LoggingMiddleware.call(env)
+    Rack::Session::Cookie.call(env)
+      Rack::MethodOverride.call(env)
+        YourApplication.call(env)
+          # Your route runs here
+          # Returns [200, headers, body]
+        # MethodOverride gets [200, headers, body]
+      # Session middleware gets [200, headers, body]
+    # Logging middleware gets [200, headers, body]
+  # Server sends the response
+</code></pre>
+<p>Each layer wraps the next. Each layer can modify the request env before passing it down, and modify the response before passing it up. The pattern is: wrap the inner app, call it, do something with the result.</p>
+<p>This is just function composition, with objects instead of functions. If you've worked with function pipelines in Elixir or middleware in Express.js, it's the same idea.</p>
+<h2 id="why-this-matters-for-you"><a class="header" href="#why-this-matters-for-you">Why This Matters for You</a></h2>
+<p>When something goes wrong in a web application, it happens at one of these layers:</p>
+<ul>
+<li>The server layer: connection issues, SSL errors, timeout behavior</li>
+<li>The middleware layer: session corruption, cookie issues, CSRF failures, content encoding problems</li>
+<li>The routing layer: 404s, parameter parsing, path matching</li>
+<li>The application layer: your actual code</li>
+</ul>
+<p>When you don't know these layers exist, every bug is mysterious. When you do, you can narrow it down quickly. Is the bug in your code, or is it in the middleware below your code? Add a middleware that logs the env before your code runs. Is the response wrong, or is a middleware above you rewriting it? Log the response after your code runs.</p>
+<p>The tools for this kind of debugging are available to you the moment you understand that your application is wrapped in a stack of callables.</p>
+<p>That's what frameworks are doing. They're arranging callables in a useful order and providing defaults that most applications need. The next step is to look at the protocol that makes all of this possible.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-rack-spec-it-fits-on-a-napkin"><a class="header" href="#the-rack-spec-it-fits-on-a-napkin">The Rack Spec (It Fits on a Napkin)</a></h1>
+<p>The Rack specification defines the interface between Ruby web servers and Ruby web applications. It was designed by Christian Neukirchen in 2007, and despite fifteen years of Ruby web development since then, it hasn't needed fundamental changes. Simple things tend to be durable.</p>
+<p>Here's the spec:</p>
+<blockquote>
+<p>A Rack application is a Ruby object (not a class) that responds to <code>call</code>. It takes exactly one argument, the <em>environment</em>, and returns a non-frozen Array of exactly three values: the <em>status</em>, the <em>headers</em>, and the <em>body</em>.</p>
+</blockquote>
+<p>That's it. Three rules:</p>
+<ol>
+<li>Your app is an object (not a class — an instance)</li>
+<li>It has a <code>call</code> method that takes an environment hash</li>
+<li><code>call</code> returns <code>[status, headers, body]</code></li>
+</ol>
+<p>Everything else is elaboration.</p>
+<h2 id="the-environment-hash"><a class="header" href="#the-environment-hash">The Environment Hash</a></h2>
+<p>The environment (called <code>env</code> by convention) is a Ruby Hash containing information about the current request. The server populates it. Your application reads from it.</p>
+<p>The Rack spec requires these keys:</p>
+<div class="table-wrapper"><table><thead><tr><th>Key</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>REQUEST_METHOD</code></td><td>String</td><td><code>"GET"</code>, <code>"POST"</code>, <code>"PUT"</code>, etc.</td></tr>
+<tr><td><code>SCRIPT_NAME</code></td><td>String</td><td>Mount point of the application (often <code>""</code>)</td></tr>
+<tr><td><code>PATH_INFO</code></td><td>String</td><td>Path component of the URL, e.g. <code>"/users/42"</code></td></tr>
+<tr><td><code>QUERY_STRING</code></td><td>String</td><td>Query string without <code>?</code>, e.g. <code>"page=2&amp;sort=name"</code></td></tr>
+<tr><td><code>SERVER_NAME</code></td><td>String</td><td>Hostname, e.g. <code>"example.com"</code></td></tr>
+<tr><td><code>SERVER_PORT</code></td><td>String</td><td>Port as a string, e.g. <code>"80"</code></td></tr>
+<tr><td><code>HTTP_*</code></td><td>String</td><td>HTTP request headers, upcased with hyphens replaced by underscores</td></tr>
+<tr><td><code>rack.version</code></td><td>Array</td><td>Rack version, e.g. <code>[1, 3]</code></td></tr>
+<tr><td><code>rack.url_scheme</code></td><td>String</td><td><code>"http"</code> or <code>"https"</code></td></tr>
+<tr><td><code>rack.input</code></td><td>IO-like</td><td>The request body, readable via <code>read</code>, <code>gets</code>, <code>each</code></td></tr>
+<tr><td><code>rack.errors</code></td><td>IO-like</td><td>Error stream (usually <code>$stderr</code>)</td></tr>
+<tr><td><code>rack.multithread</code></td><td>Boolean</td><td>Whether the server is multi-threaded</td></tr>
+<tr><td><code>rack.multiprocess</code></td><td>Boolean</td><td>Whether the server is multi-process</td></tr>
+<tr><td><code>rack.run_once</code></td><td>Boolean</td><td>Whether this process will handle only one request</td></tr>
+<tr><td><code>rack.hijack?</code></td><td>Boolean</td><td>Whether the server supports connection hijacking</td></tr>
+</tbody></table>
+</div>
+<p>In practice, you'll mostly use <code>REQUEST_METHOD</code>, <code>PATH_INFO</code>, <code>QUERY_STRING</code>, and <code>HTTP_*</code> headers. The <code>rack.input</code> stream is important for POST bodies.</p>
+<p>Some real-world additions that aren't in the base spec but you'll encounter:</p>
+<ul>
+<li><code>rack.session</code> — your session data (added by session middleware)</li>
+<li><code>rack.logger</code> — a logger (added by logger middleware)</li>
+<li><code>action_dispatch.*</code> — Rails-specific additions</li>
+<li><code>HTTP_COOKIE</code> — cookies as a string (<code>"name=value; other=thing"</code>)</li>
+</ul>
+<h2 id="the-response-array"><a class="header" href="#the-response-array">The Response Array</a></h2>
+<p>The response is <code>[status, headers, body]</code>:</p>
+<p><strong>Status</strong>: An integer HTTP status code. <code>200</code>, <code>201</code>, <code>301</code>, <code>404</code>, <code>500</code>. That's it.</p>
+<pre><code class="language-ruby">status = 200
+</code></pre>
+<p><strong>Headers</strong>: A Hash of response headers. Keys are strings. Values are strings.</p>
+<pre><code class="language-ruby">headers = {
+  'Content-Type'  =&gt; 'text/html; charset=utf-8',
+  'Content-Length' =&gt; '13',
+}
+</code></pre>
+<p><strong>Body</strong>: An object that responds to <code>each</code>, yielding string chunks. Usually an Array of strings, sometimes an IO object for streaming.</p>
+<pre><code class="language-ruby">body = ["Hello, World!"]
+
+# Or for streaming:
+body = SomeObject.new
+def body.each
+  yield "chunk 1"
+  yield "chunk 2"
+  yield "chunk 3"
+end
+</code></pre>
+<p>The full minimal response:</p>
+<pre><code class="language-ruby">[200, {'Content-Type' =&gt; 'text/plain'}, ['Hello, World!']]
+</code></pre>
+<h2 id="the-simplest-possible-rack-app"><a class="header" href="#the-simplest-possible-rack-app">The Simplest Possible Rack App</a></h2>
+<pre><code class="language-ruby"># hello.rb
+require 'rack'
+
+app = lambda do |env|
+  [200, {'Content-Type' =&gt; 'text/plain'}, ['Hello, World!']]
+end
+
+Rack::Handler::WEBrick.run app, Port: 9292
+</code></pre>
+<p>Run it:</p>
+<pre><code class="language-bash">$ gem install rack
+$ ruby hello.rb
+[2026-02-19 12:00:00] INFO  WEBrick 1.7.0
+[2026-02-19 12:00:00] INFO  ruby 3.3.0
+[2026-02-19 12:00:00] INFO  WEBrick::HTTPServer#start: pid=12345 port=9292
+</code></pre>
+<p>Then:</p>
+<pre><code class="language-bash">$ curl http://localhost:9292
+Hello, World!
+</code></pre>
+<p>The lambda is a Rack application. It takes <code>env</code>, returns <code>[status, headers, body]</code>. The spec is satisfied.</p>
+<h2 id="the-configru-format"><a class="header" href="#the-configru-format">The config.ru Format</a></h2>
+<p>Most Ruby web servers look for a <code>config.ru</code> file in the current directory. It's processed by <code>Rack::Builder</code>, which gives you a small DSL:</p>
+<pre><code class="language-ruby"># config.ru
+
+require_relative 'app'
+
+use MyMiddleware           # add middleware to the stack
+use AnotherMiddleware, option: 'value'
+
+run MyApplication.new      # the innermost app
+</code></pre>
+<ul>
+<li><code>use</code> adds a middleware layer</li>
+<li><code>run</code> sets the inner application</li>
+<li><code>map</code> mounts apps at different paths (more on this later)</li>
+</ul>
+<p>You can run any <code>config.ru</code> with:</p>
+<pre><code class="language-bash">$ rackup            # uses config.ru in current directory
+$ rackup myapp.ru   # uses a specific file
+</code></pre>
+<p><code>rackup</code> figures out the best available server and starts it.</p>
+<h2 id="reading-the-environment"><a class="header" href="#reading-the-environment">Reading the Environment</a></h2>
+<p>Here's a Rack app that echoes back what it received:</p>
+<pre><code class="language-ruby"># echo.ru
+require 'json'
+
+app = lambda do |env|
+  # Collect interesting parts of the env
+  info = {
+    method:       env['REQUEST_METHOD'],
+    path:         env['PATH_INFO'],
+    query_string: env['QUERY_STRING'],
+    headers:      env.select { |k, _| k.start_with?('HTTP_') },
+  }
+
+  # Read the body if there is one
+  body = env['rack.input'].read
+  info[:body] = body unless body.empty?
+
+  response_body = JSON.pretty_generate(info)
+
+  [
+    200,
+    {
+      'Content-Type'   =&gt; 'application/json',
+      'Content-Length' =&gt; response_body.bytesize.to_s,
+    },
+    [response_body]
+  ]
+end
+
+run app
+</code></pre>
+<pre><code class="language-bash">$ rackup echo.ru &amp;
+$ curl -X POST http://localhost:9292/test?foo=bar \
+  -H 'Content-Type: application/json' \
+  -d '{"hello": "world"}'
+</code></pre>
+<pre><code class="language-json">{
+  "method": "POST",
+  "path": "/test",
+  "query_string": "foo=bar",
+  "headers": {
+    "HTTP_HOST": "localhost:9292",
+    "HTTP_USER_AGENT": "curl/7.88.1",
+    "HTTP_ACCEPT": "*/*",
+    "HTTP_CONTENT_TYPE": "application/json",
+    "HTTP_CONTENT_LENGTH": "18"
+  },
+  "body": "{\"hello\": \"world\"}"
+}
+</code></pre>
+<p>Notice that <code>Content-Type</code> in the request becomes <code>HTTP_CONTENT_TYPE</code> in the env. The transformation is: <code>HTTP_</code> prefix + uppercase + hyphens become underscores. The <code>Host</code> header becomes <code>HTTP_HOST</code>. <code>User-Agent</code> becomes <code>HTTP_USER_AGENT</code>.</p>
+<p>There are two exceptions: <code>Content-Type</code> is available as both <code>HTTP_CONTENT_TYPE</code> and <code>CONTENT_TYPE</code> (without the <code>HTTP_</code> prefix), and <code>Content-Length</code> is <code>CONTENT_LENGTH</code>. This is for historical compatibility.</p>
+<h2 id="validation-does-your-app-comply"><a class="header" href="#validation-does-your-app-comply">Validation: Does Your App Comply?</a></h2>
+<p><code>Rack::Lint</code> is a middleware that validates Rack compliance. Wrap your app with it during development:</p>
+<pre><code class="language-ruby"># config.ru (development)
+require 'rack'
+
+app = lambda do |env|
+  [200, {'Content-Type' =&gt; 'text/plain'}, ['Hello']]
+end
+
+# Lint will raise on any spec violation
+use Rack::Lint if ENV['RACK_ENV'] == 'development'
+run app
+</code></pre>
+<p><code>Rack::Lint</code> will raise an exception if:</p>
+<ul>
+<li>Your app doesn't return a three-element array</li>
+<li>The status isn't an integer</li>
+<li>Headers aren't a hash of strings</li>
+<li>The body doesn't respond to <code>each</code></li>
+<li>The body elements aren't strings</li>
+<li>The env is missing required keys</li>
+</ul>
+<p>It's useful when writing new middleware or apps. You won't see many Rack violations in production code because frameworks handle this — but when writing bare Rack code, <code>Rack::Lint</code> is your first line of defense.</p>
+<h2 id="the-spec-is-deliberately-minimal"><a class="header" href="#the-spec-is-deliberately-minimal">The Spec Is Deliberately Minimal</a></h2>
+<p>The Rack spec doesn't say anything about:</p>
+<ul>
+<li>How to parse query strings</li>
+<li>How to parse cookies</li>
+<li>How to handle sessions</li>
+<li>How to do routing</li>
+<li>How to render templates</li>
+<li>How to parse JSON or form bodies</li>
+</ul>
+<p>These are all optional. You can build them yourself, use Rack's helpers, or use a framework. The spec only defines the handshake between server and application, not what the application does with the request.</p>
+<p>This minimalism is intentional and correct. It means any Ruby object that can accept a hash and return a three-element array is a web application. It means a Rails app and a Sinatra app and a Roda app and a hand-rolled lambda all speak the same language at the boundary between server and application.</p>
+<p>The result is an ecosystem where you can mix and match: Rails routes can mount Sinatra apps, Sinatra apps can mount Rack apps, everything can be wrapped in arbitrary middleware, and the server doesn't care what you're running as long as you respond to <code>call</code>.</p>
+<h2 id="the-napkin-version"><a class="header" href="#the-napkin-version">The Napkin Version</a></h2>
+<p>If you had to write the Rack spec on a napkin, it would say:</p>
+<pre><code>call(env) -&gt; [status, headers, body]
+
+env:    Hash of CGI-style variables + rack.* keys
+status: Integer HTTP status code
+headers: Hash of {String =&gt; String}
+body:   Responds to each, yields strings
+</code></pre>
+<p>Everything else — sessions, routing, templates, auth — is above this abstraction. The abstraction itself is simple enough to hold in your head, which means you can reason about it clearly when things go wrong.</p>
+<p>Next: let's use it.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="your-first-rack-app-no-training-wheels"><a class="header" href="#your-first-rack-app-no-training-wheels">Your First Rack App (No Training Wheels)</a></h1>
+<p>Let's build a Rack application that actually does something. Not a "hello world" one-liner, but a proper small application with routing, multiple responses, and request handling. We'll do it without a framework, using only the <code>rack</code> gem and Ruby's standard library.</p>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<pre><code class="language-bash">mkdir rack-from-scratch
+cd rack-from-scratch
+bundle init
+</code></pre>
+<p>Add to your <code>Gemfile</code>:</p>
+<pre><code class="language-ruby">gem 'rack'
+</code></pre>
+<pre><code class="language-bash">bundle install
+</code></pre>
+<h2 id="the-application"><a class="header" href="#the-application">The Application</a></h2>
+<p>We're going to build a small API that manages a list of notes. In-memory storage, no database, no ORM. Just a hash and some Rack.</p>
+<pre><code class="language-ruby"># app.rb
+require 'json'
+
+class NotesApp
+  def initialize
+    @notes = {}
+    @next_id = 1
+  end
+
+  def call(env)
+    method = env['REQUEST_METHOD']
+    path   = env['PATH_INFO']
+
+    case [method, path]
+    when ['GET', '/notes']
+      list_notes
+    when ['POST', '/notes']
+      create_note(env)
+    else
+      # Match /notes/123
+      if (match = path.match(%r{\A/notes/(\d+)\z}))
+        id = match[1].to_i
+        case method
+        when 'GET'    then show_note(id)
+        when 'DELETE' then delete_note(id)
+        else method_not_allowed
+        end
+      else
+        not_found
+      end
+    end
+  end
+
+  private
+
+  def list_notes
+    json_response(200, @notes.values)
+  end
+
+  def show_note(id)
+    note = @notes[id]
+    return not_found unless note
+    json_response(200, note)
+  end
+
+  def create_note(env)
+    body = env['rack.input'].read
+    data = JSON.parse(body)
+
+    note = {
+      'id'      =&gt; @next_id,
+      'content' =&gt; data['content'].to_s,
+      'created' =&gt; Time.now.iso8601,
+    }
+
+    @notes[@next_id] = note
+    @next_id += 1
+
+    json_response(201, note)
+  rescue JSON::ParserError
+    json_response(400, {'error' =&gt; 'Invalid JSON'})
+  end
+
+  def delete_note(id)
+    return not_found unless @notes.key?(id)
+    @notes.delete(id)
+    [204, {}, []]
+  end
+
+  def not_found
+    json_response(404, {'error' =&gt; 'Not found'})
+  end
+
+  def method_not_allowed
+    json_response(405, {'error' =&gt; 'Method not allowed'})
+  end
+
+  def json_response(status, data)
+    body = JSON.generate(data)
+    [
+      status,
+      {
+        'Content-Type'   =&gt; 'application/json',
+        'Content-Length' =&gt; body.bytesize.to_s,
+      },
+      [body]
+    ]
+  end
+end
+</code></pre>
+<pre><code class="language-ruby"># config.ru
+require_relative 'app'
+
+run NotesApp.new
+</code></pre>
+<p>Start it:</p>
+<pre><code class="language-bash">$ bundle exec rackup
+Puma starting in single mode...
+* Puma version: 6.x
+* Min threads: 0, max threads: 5
+* Listening on http://127.0.0.1:9292
+</code></pre>
+<h2 id="using-it"><a class="header" href="#using-it">Using It</a></h2>
+<pre><code class="language-bash"># Create a note
+$ curl -s -X POST http://localhost:9292/notes \
+  -H 'Content-Type: application/json' \
+  -d '{"content": "Rack is just a contract"}' | jq .
+{
+  "id": 1,
+  "content": "Rack is just a contract",
+  "created": "2026-02-19T12:00:00+00:00"
+}
+
+# Create another
+$ curl -s -X POST http://localhost:9292/notes \
+  -H 'Content-Type: application/json' \
+  -d '{"content": "env is just a hash"}' | jq .
+{
+  "id": 2,
+  "content": "env is just a hash",
+  "created": "2026-02-19T12:00:01+00:00"
+}
+
+# List all notes
+$ curl -s http://localhost:9292/notes | jq .
+[
+  {"id": 1, "content": "Rack is just a contract", "created": "..."},
+  {"id": 2, "content": "env is just a hash", "created": "..."}
+]
+
+# Get one note
+$ curl -s http://localhost:9292/notes/1 | jq .
+{"id": 1, "content": "Rack is just a contract", "created": "..."}
+
+# Delete a note
+$ curl -s -X DELETE http://localhost:9292/notes/1
+# 204 No Content, empty body
+
+# Confirm deletion
+$ curl -s http://localhost:9292/notes/1 | jq .
+{"error": "Not found"}
+
+# Invalid JSON
+$ curl -s -X POST http://localhost:9292/notes \
+  -H 'Content-Type: application/json' \
+  -d 'not json' | jq .
+{"error": "Invalid JSON"}
+</code></pre>
+<p>This is a functional REST API. No framework. No router gem. About 80 lines of Ruby.</p>
+<h2 id="what-were-missing"><a class="header" href="#what-were-missing">What We're Missing</a></h2>
+<p>This is a good moment to notice what we haven't done:</p>
+<p><strong>No request parsing helpers.</strong> We read <code>env['rack.input'].read</code> directly and parsed JSON ourselves. For URL-encoded form data, we'd need to parse <code>name=value&amp;other=thing</code> ourselves, or reach for <code>Rack::Utils.parse_query</code>.</p>
+<p><strong>No URL helpers.</strong> We matched routes with a <code>case</code> statement and regex. This works but doesn't scale gracefully.</p>
+<p><strong>No content negotiation.</strong> We ignore the client's <code>Accept</code> header. A real API should check whether the client wants JSON before sending JSON.</p>
+<p><strong>No error handling for the whole app.</strong> If something explodes with an unexpected exception, Rack's handler returns a 500 with a generic page. We'd want to catch and format that ourselves.</p>
+<p><strong>No middleware.</strong> No logging, no session handling, no CORS headers.</p>
+<p>These aren't criticisms — they're deliberate omissions to keep the example clear. For production, you'd add them, or use a framework that provides them as defaults.</p>
+<h2 id="adding-racks-own-helpers"><a class="header" href="#adding-racks-own-helpers">Adding Rack's Own Helpers</a></h2>
+<p>The <code>rack</code> gem includes utilities you can use without a framework. Let's use a couple:</p>
+<pre><code class="language-ruby">require 'json'
+require 'rack'
+
+class NotesApp
+  def call(env)
+    request = Rack::Request.new(env)
+
+    method = request.request_method
+    path   = request.path_info
+
+    # Parse query parameters automatically
+    page = request.params['page']&amp;.to_i || 1
+
+    # Check content type on POST
+    if request.post? &amp;&amp; !request.content_type&amp;.include?('application/json')
+      return json_response(415, {'error' =&gt; 'Content-Type must be application/json'})
+    end
+
+    # ... rest of routing ...
+  end
+end
+</code></pre>
+<p><code>Rack::Request</code> wraps the env hash and provides methods like:</p>
+<ul>
+<li><code>request.get?</code>, <code>request.post?</code>, <code>request.delete?</code></li>
+<li><code>request.path_info</code> — same as <code>env['PATH_INFO']</code></li>
+<li><code>request.params</code> — merged GET and POST params, URL-decoded</li>
+<li><code>request.body.read</code> — the request body</li>
+<li><code>request.content_type</code></li>
+<li><code>request.cookies</code> — parsed cookie hash</li>
+<li><code>request.xhr?</code> — true if it's an XMLHttpRequest</li>
+<li><code>request.ip</code> — client IP address</li>
+</ul>
+<p>And <code>Rack::Response</code> for building responses:</p>
+<pre><code class="language-ruby">def json_response(status, data)
+  body = JSON.generate(data)
+  response = Rack::Response.new
+  response.status = status
+  response['Content-Type'] = 'application/json'
+  response.write(body)
+  response.finish  # returns [status, headers, body]
+end
+</code></pre>
+<p>These are thin wrappers around the same env hash and response array. They don't add framework overhead — they add ergonomics.</p>
+<h2 id="writing-a-test"><a class="header" href="#writing-a-test">Writing a Test</a></h2>
+<p>Because this is plain Ruby, testing is straightforward. You don't need a test server. You just call <code>call</code> with a fake env:</p>
+<pre><code class="language-ruby"># test_app.rb
+require 'minitest/autorun'
+require 'json'
+require 'rack/mock'
+require_relative 'app'
+
+class TestNotesApp &lt; Minitest::Test
+  def setup
+    @app = NotesApp.new
+  end
+
+  def test_empty_list
+    status, headers, body = get('/notes')
+    assert_equal 200, status
+    assert_equal 'application/json', headers['Content-Type']
+    assert_equal [], JSON.parse(body.join)
+  end
+
+  def test_create_note
+    status, headers, body = post('/notes', '{"content": "test note"}')
+    assert_equal 201, status
+    data = JSON.parse(body.join)
+    assert_equal 'test note', data['content']
+    assert data['id']
+  end
+
+  def test_show_note
+    _, _, body = post('/notes', '{"content": "hello"}')
+    id = JSON.parse(body.join)['id']
+
+    status, _, body = get("/notes/#{id}")
+    assert_equal 200, status
+    assert_equal 'hello', JSON.parse(body.join)['content']
+  end
+
+  def test_not_found
+    status, _, body = get('/notes/999')
+    assert_equal 404, status
+    assert_equal 'Not found', JSON.parse(body.join)['error']
+  end
+
+  def test_delete_note
+    _, _, body = post('/notes', '{"content": "delete me"}')
+    id = JSON.parse(body.join)['id']
+
+    status, _, _ = delete("/notes/#{id}")
+    assert_equal 204, status
+
+    status, _, _ = get("/notes/#{id}")
+    assert_equal 404, status
+  end
+
+  private
+
+  def get(path)
+    env = Rack::MockRequest.env_for(path, method: 'GET')
+    @app.call(env)
+  end
+
+  def post(path, body)
+    env = Rack::MockRequest.env_for(path,
+      method: 'POST',
+      input: body,
+      'CONTENT_TYPE' =&gt; 'application/json'
+    )
+    @app.call(env)
+  end
+
+  def delete(path)
+    env = Rack::MockRequest.env_for(path, method: 'DELETE')
+    @app.call(env)
+  end
+end
+</code></pre>
+<p><code>Rack::MockRequest.env_for</code> builds a valid Rack env hash for testing purposes. Run it:</p>
+<pre><code class="language-bash">$ ruby test_app.rb
+Run options: --seed 12345
+
+# Running:
+
+.....
+
+Finished in 0.001s, 4000.0 runs/s.
+5 runs, 8 assertions, 0 failures, 0 errors, 0 skips
+</code></pre>
+<p>Five tests, sub-millisecond runtime, no HTTP server, no magic. The application is a Ruby object. You test it like one.</p>
+<h2 id="the-insight"><a class="header" href="#the-insight">The Insight</a></h2>
+<p>Here's the moment this chapter promised:</p>
+<p><strong>A web application is a function.</strong> It takes input (the env hash) and returns output (status, headers, body). Testing it is exactly as easy as testing any other function. The fact that it handles HTTP is incidental to what it actually is: an object with a <code>call</code> method.</p>
+<p>This is why Rack applications are easy to compose, easy to test, and easy to reason about. The framework complexity you're accustomed to isn't inherent to web development — it's a response to problems that arise at scale. At small scale, or with the right tools, you don't always need it.</p>
+<p>Next: let's build the thing that calls your app — the server itself.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="build-a-rack-server-from-scratch"><a class="header" href="#build-a-rack-server-from-scratch">Build a Rack Server from Scratch</a></h1>
+<p>A Rack server has one job: accept HTTP connections, parse them into a Rack env hash, call your application, and serialize the response back into HTTP. Let's build one.</p>
+<p>This isn't a production server. It handles one request at a time, ignores keep-alive, has no TLS, and will fall over under load. It is, however, a real HTTP server that speaks valid HTTP/1.1 and can run actual Rack applications. Understanding it will demystify everything that happens before your application code runs.</p>
+<h2 id="the-structure"><a class="header" href="#the-structure">The Structure</a></h2>
+<p>A Rack server needs to:</p>
+<ol>
+<li>Listen on a TCP port</li>
+<li>Accept connections in a loop</li>
+<li>Parse the HTTP request into a Rack env hash</li>
+<li>Call the application with the env</li>
+<li>Serialize the <code>[status, headers, body]</code> response into HTTP</li>
+<li>Write it to the socket</li>
+</ol>
+<p>Let's build each piece.</p>
+<h2 id="step-1-the-tcp-listener"><a class="header" href="#step-1-the-tcp-listener">Step 1: The TCP Listener</a></h2>
+<pre><code class="language-ruby">require 'socket'
+
+server = TCPServer.new('0.0.0.0', 9292)
+puts "Listening on http://localhost:9292"
+
+loop do
+  client = server.accept
+  # handle client
+  client.close
+end
+</code></pre>
+<p><code>TCPServer.new</code> opens a socket. <code>server.accept</code> blocks until a connection arrives, then returns a <code>TCPSocket</code> representing that connection. Straightforward.</p>
+<h2 id="step-2-parsing-the-http-request"><a class="header" href="#step-2-parsing-the-http-request">Step 2: Parsing the HTTP Request</a></h2>
+<p>HTTP requests look like this:</p>
+<pre><code>GET /path?query=string HTTP/1.1\r\n
+Host: localhost:9292\r\n
+Accept: text/html\r\n
+\r\n
+</code></pre>
+<p>We need to parse this into a Rack env hash. The tricky parts are:</p>
+<ul>
+<li>Headers end at a blank line (<code>\r\n</code> alone)</li>
+<li>The body follows the blank line, if <code>Content-Length</code> is set</li>
+<li>Header names become <code>HTTP_UPPERCASED_WITH_UNDERSCORES</code></li>
+</ul>
+<pre><code class="language-ruby">def parse_request(client)
+  # Read the request line
+  request_line = client.gets&amp;.chomp
+  return nil unless request_line
+
+  method, full_path, http_version = request_line.split(' ', 3)
+  path, query_string = full_path.split('?', 2)
+
+  # Read headers until blank line
+  headers = {}
+  while (line = client.gets&amp;.chomp) &amp;&amp; !line.empty?
+    name, value = line.split(': ', 2)
+    headers[name] = value
+  end
+
+  # Read body if Content-Length is present
+  body = ''
+  if (length = headers['Content-Length']&amp;.to_i) &amp;&amp; length &gt; 0
+    body = client.read(length)
+  end
+
+  # Build the Rack env
+  env = {
+    # Required CGI variables
+    'REQUEST_METHOD'    =&gt; method,
+    'SCRIPT_NAME'       =&gt; '',
+    'PATH_INFO'         =&gt; path,
+    'QUERY_STRING'      =&gt; query_string || '',
+    'SERVER_NAME'       =&gt; 'localhost',
+    'SERVER_PORT'       =&gt; '9292',
+    'HTTP_VERSION'      =&gt; http_version,
+    'SERVER_PROTOCOL'   =&gt; http_version,
+
+    # Rack-specific
+    'rack.version'      =&gt; [1, 3],
+    'rack.input'        =&gt; StringIO.new(body),
+    'rack.errors'       =&gt; $stderr,
+    'rack.multithread'  =&gt; false,
+    'rack.multiprocess' =&gt; false,
+    'rack.run_once'     =&gt; false,
+    'rack.url_scheme'   =&gt; 'http',
+  }
+
+  # Convert HTTP headers to CGI format
+  headers.each do |name, value|
+    # Content-Type and Content-Length get special treatment
+    key = case name
+          when 'Content-Type'   then 'CONTENT_TYPE'
+          when 'Content-Length' then 'CONTENT_LENGTH'
+          else "HTTP_#{name.upcase.gsub('-', '_')}"
+          end
+    env[key] = value
+  end
+
+  env
+end
+</code></pre>
+<p>The header name transformation — <code>Content-Type</code> becomes <code>HTTP_CONTENT_TYPE</code>, <code>X-Request-Id</code> becomes <code>HTTP_X_REQUEST_ID</code> — is a CGI convention that Rack inherits. It's annoying but consistent.</p>
+<h2 id="step-3-serializing-the-response"><a class="header" href="#step-3-serializing-the-response">Step 3: Serializing the Response</a></h2>
+<p>The response is <code>[status, headers, body]</code>. We need to turn that into HTTP/1.1 text:</p>
+<pre><code class="language-ruby">STATUS_PHRASES = {
+  200 =&gt; 'OK',
+  201 =&gt; 'Created',
+  204 =&gt; 'No Content',
+  301 =&gt; 'Moved Permanently',
+  302 =&gt; 'Found',
+  304 =&gt; 'Not Modified',
+  400 =&gt; 'Bad Request',
+  401 =&gt; 'Unauthorized',
+  403 =&gt; 'Forbidden',
+  404 =&gt; 'Not Found',
+  405 =&gt; 'Method Not Allowed',
+  415 =&gt; 'Unsupported Media Type',
+  422 =&gt; 'Unprocessable Entity',
+  500 =&gt; 'Internal Server Error',
+}.freeze
+
+def send_response(client, status, headers, body)
+  phrase = STATUS_PHRASES[status] || 'Unknown'
+
+  # Status line
+  client.write("HTTP/1.1 #{status} #{phrase}\r\n")
+
+  # Headers
+  headers.each do |name, value|
+    client.write("#{name}: #{value}\r\n")
+  end
+
+  # Blank line separating headers from body
+  client.write("\r\n")
+
+  # Body — iterate over whatever the app gave us
+  body.each do |chunk|
+    client.write(chunk)
+  end
+
+  # Some body objects need to be closed (file handles, etc.)
+  body.close if body.respond_to?(:close)
+end
+</code></pre>
+<h2 id="putting-it-together"><a class="header" href="#putting-it-together">Putting It Together</a></h2>
+<pre><code class="language-ruby"># tiny_server.rb
+require 'socket'
+require 'stringio'
+
+STATUS_PHRASES = {
+  200 =&gt; 'OK', 201 =&gt; 'Created', 204 =&gt; 'No Content',
+  301 =&gt; 'Moved Permanently', 302 =&gt; 'Found',
+  400 =&gt; 'Bad Request', 401 =&gt; 'Unauthorized',
+  403 =&gt; 'Forbidden', 404 =&gt; 'Not Found',
+  405 =&gt; 'Method Not Allowed', 500 =&gt; 'Internal Server Error',
+}.freeze
+
+def parse_request(client)
+  request_line = client.gets&amp;.chomp
+  return nil unless request_line &amp;&amp; !request_line.empty?
+
+  method, full_path, http_version = request_line.split(' ', 3)
+  path, query_string = full_path.split('?', 2)
+
+  headers = {}
+  while (line = client.gets&amp;.chomp) &amp;&amp; !line.empty?
+    name, value = line.split(': ', 2)
+    headers[name] = value
+  end
+
+  body = ''
+  if (length = headers['Content-Length']&amp;.to_i) &amp;&amp; length &gt; 0
+    body = client.read(length)
+  end
+
+  env = {
+    'REQUEST_METHOD'    =&gt; method,
+    'SCRIPT_NAME'       =&gt; '',
+    'PATH_INFO'         =&gt; path,
+    'QUERY_STRING'      =&gt; query_string || '',
+    'SERVER_NAME'       =&gt; 'localhost',
+    'SERVER_PORT'       =&gt; '9292',
+    'SERVER_PROTOCOL'   =&gt; http_version || 'HTTP/1.1',
+    'rack.version'      =&gt; [1, 3],
+    'rack.input'        =&gt; StringIO.new(body),
+    'rack.errors'       =&gt; $stderr,
+    'rack.multithread'  =&gt; false,
+    'rack.multiprocess' =&gt; false,
+    'rack.run_once'     =&gt; false,
+    'rack.url_scheme'   =&gt; 'http',
+  }
+
+  headers.each do |name, value|
+    key = case name
+          when 'Content-Type'   then 'CONTENT_TYPE'
+          when 'Content-Length' then 'CONTENT_LENGTH'
+          else "HTTP_#{name.upcase.tr('-', '_')}"
+          end
+    env[key] = value
+  end
+
+  env
+end
+
+def send_response(client, status, headers, body)
+  phrase = STATUS_PHRASES[status] || 'Unknown'
+  client.write("HTTP/1.1 #{status} #{phrase}\r\n")
+  headers.each { |name, value| client.write("#{name}: #{value}\r\n") }
+  client.write("\r\n")
+  body.each { |chunk| client.write(chunk) }
+  body.close if body.respond_to?(:close)
+end
+
+def run(app, port: 9292)
+  server = TCPServer.new('0.0.0.0', port)
+  puts "TinyServer listening on http://localhost:#{port}"
+
+  loop do
+    client = server.accept
+
+    begin
+      env = parse_request(client)
+
+      if env
+        status, headers, body = app.call(env)
+        send_response(client, status, headers, body)
+      end
+    rescue =&gt; e
+      $stderr.puts "Error handling request: #{e.message}"
+      $stderr.puts e.backtrace.first(5).join("\n")
+
+      error_body = "Internal Server Error\n"
+      client.write("HTTP/1.1 500 Internal Server Error\r\n")
+      client.write("Content-Type: text/plain\r\n")
+      client.write("Content-Length: #{error_body.bytesize}\r\n")
+      client.write("\r\n")
+      client.write(error_body)
+    ensure
+      client.close
+    end
+  end
+end
+</code></pre>
+<h2 id="running-it-with-a-real-app"><a class="header" href="#running-it-with-a-real-app">Running It with a Real App</a></h2>
+<p>Let's plug in the notes app from the previous chapter:</p>
+<pre><code class="language-ruby"># run_notes.rb
+require_relative 'tiny_server'
+require_relative 'app'  # the NotesApp from the previous chapter
+
+run NotesApp.new, port: 9292
+</code></pre>
+<pre><code class="language-bash">$ ruby run_notes.rb
+TinyServer listening on http://localhost:9292
+</code></pre>
+<pre><code class="language-bash">$ curl -s http://localhost:9292/notes
+[]
+
+$ curl -s -X POST http://localhost:9292/notes \
+  -H 'Content-Type: application/json' \
+  -d '{"content": "It works"}' | jq .
+{"id":1,"content":"It works","created":"2026-02-19T12:00:00+00:00"}
+
+$ curl -s http://localhost:9292/notes | jq .
+[{"id":1,"content":"It works","created":"2026-02-19T12:00:00+00:00"}]
+</code></pre>
+<p>Your handwritten server, running your handwritten app. Real HTTP, real TCP sockets.</p>
+<h2 id="making-it-threaded"><a class="header" href="#making-it-threaded">Making It Threaded</a></h2>
+<p>The current server handles one request at a time — the next <code>server.accept</code> doesn't run until the current request is finished. For a learning tool, fine. For anything resembling concurrent use, we need threads:</p>
+<pre><code class="language-ruby">def run(app, port: 9292)
+  server = TCPServer.new('0.0.0.0', port)
+  puts "TinyServer (threaded) on http://localhost:#{port}"
+
+  loop do
+    client = server.accept
+
+    Thread.new(client) do |conn|
+      begin
+        env = parse_request(conn)
+        if env
+          status, headers, body = app.call(env)
+          send_response(conn, status, headers, body)
+        end
+      rescue =&gt; e
+        $stderr.puts "Error: #{e.message}"
+      ensure
+        conn.close
+      end
+    end
+  end
+end
+</code></pre>
+<p>Each connection gets its own thread. The main loop immediately returns to <code>accept</code>, ready for the next connection. This is essentially what WEBrick does (minus SSL, keep-alive, virtual host support, and a decade of edge-case handling).</p>
+<h2 id="what-were-not-handling"><a class="header" href="#what-were-not-handling">What We're Not Handling</a></h2>
+<p>A production HTTP/1.1 server needs to handle:</p>
+<ul>
+<li><strong>Keep-alive connections</strong>: HTTP/1.1 keeps connections open by default. Our server closes after every response, which is valid but wasteful.</li>
+<li><strong>Chunked transfer encoding</strong>: When <code>Content-Length</code> is unknown at response time, you can send data in chunks.</li>
+<li><strong>HTTP pipelining</strong>: Multiple requests on the same connection before any response.</li>
+<li><strong>Request timeouts</strong>: A client that connects and never sends data will tie up a thread forever.</li>
+<li><strong>Very large bodies</strong>: We read the entire body into memory. For file uploads, you'd want streaming.</li>
+<li><strong>SSL/TLS</strong>: Everything above is cleartext.</li>
+<li><strong>HTTP/2</strong>: A binary protocol with multiplexing; fundamentally different from HTTP/1.1.</li>
+</ul>
+<p>Puma, the default Rails server, handles all of these. It's about 10,000 lines of code. Our server is about 80. The gap is instructive — those 9,920 lines are solving real, hard problems. But the core idea — parse a hash, call an object, serialize the result — is in our 80 lines.</p>
+<h2 id="the-moment"><a class="header" href="#the-moment">The Moment</a></h2>
+<p>Here it is: <strong>the only thing a web server does is build a hash and call your code.</strong> The hash has a few required keys. Your code returns a three-element array. The server turns that array into text and sends it over a socket.</p>
+<p>When Puma says it "runs Rack applications," this is what it means. When we say "Rack-compatible server," we mean "a server that knows how to build this specific hash and interpret this specific array." The protocol is simple enough that we just implemented a conforming server in under a hundred lines.</p>
+<p>Next: the middleware chain that sits between the server and your app.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="middleware-turtles-all-the-way-down"><a class="header" href="#middleware-turtles-all-the-way-down">Middleware: Turtles All the Way Down</a></h1>
+<p>Middleware is the most overloaded term in web development. In Rack's context, it has a precise meaning: a middleware is a Rack application that wraps another Rack application.</p>
+<p>That's it. An object with a <code>call</code> method that receives an inner app in its initializer, delegates to it, and adds some behavior before or after (or instead of) that delegation.</p>
+<h2 id="the-pattern"><a class="header" href="#the-pattern">The Pattern</a></h2>
+<pre><code class="language-ruby">class MyMiddleware
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    # Do something before the inner app runs
+    
+    status, headers, body = @app.call(env)
+    
+    # Do something after the inner app runs
+    
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>This is the complete middleware pattern. Everything else is elaboration.</p>
+<p>The <code>initialize</code> method receives the next application in the chain. The <code>call</code> method can:</p>
+<ul>
+<li>Inspect or modify <code>env</code> before passing it down</li>
+<li>Decide not to call <code>@app</code> at all (short-circuit)</li>
+<li>Inspect or modify the <code>[status, headers, body]</code> before returning it up</li>
+<li>Call <code>@app</code> multiple times (for retry logic)</li>
+<li>Do work in a separate thread (for async logging)</li>
+</ul>
+<h2 id="a-real-example-request-logging"><a class="header" href="#a-real-example-request-logging">A Real Example: Request Logging</a></h2>
+<pre><code class="language-ruby">class RequestLogger
+  def initialize(app, logger: $stdout)
+    @app    = app
+    @logger = logger
+  end
+
+  def call(env)
+    start  = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    method = env['REQUEST_METHOD']
+    path   = env['PATH_INFO']
+    
+    status, headers, body = @app.call(env)
+    
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    ms = (elapsed * 1000).round(1)
+
+    @logger.puts "[#{Time.now.strftime('%H:%M:%S')}] #{method} #{path} → #{status} (#{ms}ms)"
+
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>Use it:</p>
+<pre><code class="language-ruby"># config.ru
+require_relative 'app'
+require_relative 'request_logger'
+
+use RequestLogger
+run NotesApp.new
+</code></pre>
+<p>Now every request is logged:</p>
+<pre><code>[12:00:00] GET /notes → 200 (0.3ms)
+[12:00:01] POST /notes → 201 (0.8ms)
+[12:00:02] GET /notes/1 → 200 (0.2ms)
+[12:00:03] DELETE /notes/1 → 204 (0.1ms)
+[12:00:04] GET /notes/999 → 404 (0.1ms)
+</code></pre>
+<p>The application knows nothing about this. <code>NotesApp</code> didn't change. The logging behavior is composed around it.</p>
+<h2 id="a-real-example-authentication"><a class="header" href="#a-real-example-authentication">A Real Example: Authentication</a></h2>
+<pre><code class="language-ruby">class BasicAuth
+  def initialize(app, realm:, credentials:)
+    @app         = app
+    @realm       = realm
+    @credentials = credentials  # { username =&gt; password }
+  end
+
+  def call(env)
+    auth = env['HTTP_AUTHORIZATION']
+
+    if auth &amp;&amp; auth.start_with?('Basic ')
+      encoded = auth.sub('Basic ', '')
+      username, password = Base64.decode64(encoded).split(':', 2)
+
+      if @credentials[username] == password
+        # Auth success — pass through to the app
+        env['authenticated_user'] = username
+        return @app.call(env)
+      end
+    end
+
+    # Auth failed — short-circuit, don't call the inner app
+    [
+      401,
+      {
+        'Content-Type'     =&gt; 'text/plain',
+        'WWW-Authenticate' =&gt; "Basic realm=\"#{@realm}\"",
+      },
+      ['Unauthorized']
+    ]
+  end
+end
+</code></pre>
+<p>Use it:</p>
+<pre><code class="language-ruby"># config.ru
+require 'base64'
+require_relative 'app'
+require_relative 'basic_auth'
+
+use BasicAuth,
+  realm: 'Notes API',
+  credentials: { 'admin' =&gt; 'secret' }
+
+run NotesApp.new
+</code></pre>
+<p>Now:</p>
+<pre><code class="language-bash"># No credentials
+$ curl -s http://localhost:9292/notes
+Unauthorized
+
+# Wrong password
+$ curl -s -u admin:wrong http://localhost:9292/notes
+Unauthorized
+
+# Correct credentials
+$ curl -s -u admin:secret http://localhost:9292/notes
+[]
+</code></pre>
+<p>The inner app still knows nothing about authentication. <code>NotesApp</code> didn't change. Authentication is entirely handled in the middleware layer.</p>
+<h2 id="a-real-example-response-time-header"><a class="header" href="#a-real-example-response-time-header">A Real Example: Response Time Header</a></h2>
+<pre><code class="language-ruby">class ResponseTime
+  HEADER = 'X-Response-Time'.freeze
+
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    status, headers, body = @app.call(env)
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+
+    headers[HEADER] = "#{(elapsed * 1000).round(2)}ms"
+
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>This modifies the <em>response</em> rather than the request. It adds a header after the inner app runs.</p>
+<h2 id="composing-multiple-middlewares"><a class="header" href="#composing-multiple-middlewares">Composing Multiple Middlewares</a></h2>
+<p>When you <code>use</code> multiple middlewares in <code>config.ru</code>, they nest:</p>
+<pre><code class="language-ruby"># config.ru
+use ResponseTime
+use RequestLogger
+use BasicAuth, realm: 'Notes', credentials: { 'user' =&gt; 'pass' }
+run NotesApp.new
+</code></pre>
+<p>The call stack for a request is:</p>
+<pre><code>ResponseTime.call(env)
+  RequestLogger.call(env)
+    BasicAuth.call(env)
+      NotesApp.call(env)    # only if auth passes
+    BasicAuth returns [status, headers, body]
+  RequestLogger returns [status, headers, body] (after logging)
+ResponseTime returns [status, headers, body] (after adding X-Response-Time)
+</code></pre>
+<p>The first <code>use</code> is the outermost layer. The <code>run</code> is the innermost. Middleware added first wraps everything else.</p>
+<p>This has a non-obvious implication: <strong><code>RequestLogger</code> runs inside <code>ResponseTime</code></strong>. If <code>RequestLogger</code> adds 0.1ms of overhead, that overhead is included in the response time that <code>ResponseTime</code> measures. Whether that's what you want depends on what you're measuring.</p>
+<h2 id="building-a-middleware-stack-manually"><a class="header" href="#building-a-middleware-stack-manually">Building a Middleware Stack Manually</a></h2>
+<p><code>Rack::Builder</code> (what <code>config.ru</code> uses) is just a class that builds a chain of middlewares. We can do it manually to see the structure:</p>
+<pre><code class="language-ruby">require_relative 'app'
+require_relative 'request_logger'
+require_relative 'response_time'
+
+# Build the stack by hand — innermost to outermost
+inner  = NotesApp.new
+logged = RequestLogger.new(inner)
+timed  = ResponseTime.new(logged)
+
+# timed is the outermost app — this is what the server calls
+status, headers, body = timed.call(env)
+</code></pre>
+<p>Or using <code>Rack::Builder</code> directly:</p>
+<pre><code class="language-ruby">app = Rack::Builder.new do
+  use ResponseTime
+  use RequestLogger
+  run NotesApp.new
+end
+
+# app.call(env) now goes through the whole stack
+</code></pre>
+<p><code>Rack::Builder</code> does exactly what we did manually — it builds a chain of closures, each wrapping the next.</p>
+<h2 id="middleware-from-the-rack-gem"><a class="header" href="#middleware-from-the-rack-gem">Middleware from the Rack Gem</a></h2>
+<p>The <code>rack</code> gem ships with a set of useful middlewares:</p>
+<pre><code class="language-ruby"># Adds X-Runtime header (response time)
+use Rack::Runtime
+
+# Rewrites POST bodies with _method=DELETE to DELETE requests
+use Rack::MethodOverride
+
+# Adds ETag and Last-Modified for conditional GET support
+use Rack::ConditionalGet
+use Rack::ETag
+
+# Compresses responses with gzip when client supports it
+use Rack::Deflater
+
+# Serves static files from ./public
+use Rack::Static, urls: ['/assets'], root: 'public'
+
+# Basic request/response logging
+use Rack::CommonLogger
+
+# Cookie-based sessions
+use Rack::Session::Cookie, secret: 'your_secret_key'
+</code></pre>
+<p>These are all just implementations of the same pattern: initialize with <code>app</code>, implement <code>call</code>.</p>
+<h2 id="middleware-order-matters"><a class="header" href="#middleware-order-matters">Middleware Order Matters</a></h2>
+<pre><code class="language-ruby"># WRONG order: Static serves before auth check
+use Rack::Static, urls: ['/admin/files']
+use BasicAuth, realm: 'Admin'
+run AdminApp.new
+
+# RIGHT order: Auth runs first, wraps everything including Static
+use BasicAuth, realm: 'Admin'
+use Rack::Static, urls: ['/admin/files']
+run AdminApp.new
+</code></pre>
+<p>In the wrong order, requests to <code>/admin/files/secret.pdf</code> bypass authentication because <code>Rack::Static</code> intercepts them before <code>BasicAuth</code> gets a chance to check credentials.</p>
+<p>This kind of bug is especially fun to debug when you inherited the codebase.</p>
+<h2 id="conditional-middleware"><a class="header" href="#conditional-middleware">Conditional Middleware</a></h2>
+<p>Sometimes you want middleware only in certain environments:</p>
+<pre><code class="language-ruby"># config.ru
+if ENV['RACK_ENV'] == 'development'
+  use Rack::Lint       # validates Rack compliance — catches your bugs
+  use RequestLogger
+end
+
+use Rack::Session::Cookie, secret: ENV.fetch('SESSION_SECRET')
+run MyApp.new
+</code></pre>
+<p><code>Rack::Lint</code> is particularly useful during development — it validates that your app and middleware are conforming to the spec and raises helpful errors when they don't.</p>
+<h2 id="writing-middleware-that-passes-options"><a class="header" href="#writing-middleware-that-passes-options">Writing Middleware That Passes Options</a></h2>
+<p>A common pattern is passing configuration at use-time:</p>
+<pre><code class="language-ruby">class RateLimiter
+  def initialize(app, limit: 100, window: 60)
+    @app    = app
+    @limit  = limit
+    @window = window
+    @counts = Hash.new(0)
+    @mutex  = Mutex.new
+  end
+
+  def call(env)
+    ip = env['REMOTE_ADDR']
+
+    @mutex.synchronize do
+      @counts[ip] += 1
+
+      if @counts[ip] &gt; @limit
+        return [
+          429,
+          {'Content-Type' =&gt; 'text/plain', 'Retry-After' =&gt; @window.to_s},
+          ['Too Many Requests']
+        ]
+      end
+    end
+
+    @app.call(env)
+  end
+end
+
+# In config.ru:
+use RateLimiter, limit: 50, window: 30
+</code></pre>
+<p>The <code>initialize</code> arguments after <code>app</code> are the middleware's configuration options. <code>Rack::Builder</code> passes them through when you write <code>use RateLimiter, limit: 50</code>.</p>
+<h2 id="the-insight-1"><a class="header" href="#the-insight-1">The Insight</a></h2>
+<p>Here's what took me too long to realize: <strong>middleware is just objects calling other objects.</strong> There's no framework magic. There's no DSL. There's no reflection or code generation. It's a chain of Ruby objects where each one holds a reference to the next and delegates to it.</p>
+<p>When you understand this, you can:</p>
+<ul>
+<li>Read any middleware and understand it immediately</li>
+<li>Write middleware that does exactly what you need</li>
+<li>Debug middleware issues by temporarily removing layers</li>
+<li>Understand why middleware order matters</li>
+</ul>
+<p>The entire Rack ecosystem — gems, frameworks, servers — is built on this pattern. A Rails app with 20 middlewares is just 20 objects arranged in a chain. When something goes wrong in that chain, you now know how to find it.</p>
+<p>Next: what those middlewares are usually protecting — your routing.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="routing-without-a-framework-its-just-string-matching"><a class="header" href="#routing-without-a-framework-its-just-string-matching">Routing Without a Framework (It's Just String Matching)</a></h1>
+<p>Routing is the process of mapping an incoming HTTP request to a handler. Frameworks make this look sophisticated. It isn't. It's string matching with some parameter extraction.</p>
+<p>Let's implement a router from scratch, then look at what frameworks add on top.</p>
+<h2 id="what-routing-actually-is"><a class="header" href="#what-routing-actually-is">What Routing Actually Is</a></h2>
+<p>Given a request with <code>METHOD = "GET"</code> and <code>PATH_INFO = "/users/42/posts"</code>, routing finds the code that should handle it. The two inputs are the HTTP method and the path. The outputs are: either "run this code" or "404."</p>
+<p>That's the whole problem. Everything else is ergonomics.</p>
+<h2 id="the-simplest-router"><a class="header" href="#the-simplest-router">The Simplest Router</a></h2>
+<p>From the previous chapter's NotesApp, we had:</p>
+<pre><code class="language-ruby">case [method, path]
+when ['GET', '/notes']
+  list_notes
+when ['POST', '/notes']
+  create_note(env)
+end
+</code></pre>
+<p>This is a router. It matches on method and exact path. The problem: it doesn't handle path parameters (<code>/notes/42</code>).</p>
+<h2 id="path-parameters-via-regex"><a class="header" href="#path-parameters-via-regex">Path Parameters via Regex</a></h2>
+<pre><code class="language-ruby">class Router
+  def initialize
+    @routes = []
+  end
+
+  def add(method, pattern, &amp;handler)
+    # Convert /users/:id/posts to a regex with named captures
+    regex = pattern.gsub(/:(\w+)/, '(?&lt;\1&gt;[^/]+)')
+    regex = Regexp.new("\\A#{regex}\\z")
+    @routes &lt;&lt; {method: method, pattern: regex, handler: handler}
+  end
+
+  def get(path, &amp;block)  = add('GET',    path, &amp;block)
+  def post(path, &amp;block) = add('POST',   path, &amp;block)
+  def put(path, &amp;block)  = add('PUT',    path, &amp;block)
+  def patch(path, &amp;block)= add('PATCH',  path, &amp;block)
+  def delete(path, &amp;block)=add('DELETE', path, &amp;block)
+
+  def call(env)
+    method = env['REQUEST_METHOD']
+    path   = env['PATH_INFO']
+
+    @routes.each do |route|
+      next unless route[:method] == method
+      next unless (match = route[:pattern].match(path))
+
+      # Extract named captures as string keys
+      params = match.named_captures
+      env['router.params'] = params
+
+      return route[:handler].call(env, params)
+    end
+
+    [404, {'Content-Type' =&gt; 'text/plain'}, ['Not Found']]
+  end
+end
+</code></pre>
+<p>Using it:</p>
+<pre><code class="language-ruby">router = Router.new
+
+router.get('/') do |env, params|
+  [200, {'Content-Type' =&gt; 'text/plain'}, ['Welcome']]
+end
+
+router.get('/users/:id') do |env, params|
+  [200, {'Content-Type' =&gt; 'text/plain'}, ["User #{params['id']}"]]
+end
+
+router.get('/users/:user_id/posts/:id') do |env, params|
+  body = "Post #{params['id']} by user #{params['user_id']}"
+  [200, {'Content-Type' =&gt; 'text/plain'}, [body]]
+end
+
+router.post('/users') do |env, params|
+  # Create a user...
+  [201, {'Content-Type' =&gt; 'text/plain'}, ['Created']]
+end
+</code></pre>
+<p>Test it:</p>
+<pre><code class="language-ruby">require 'rack/mock'
+
+def request(router, method, path)
+  env = Rack::MockRequest.env_for(path, method: method)
+  status, _, body = router.call(env)
+  [status, body.join]
+end
+
+puts request(router, 'GET',  '/')                          # [200, "Welcome"]
+puts request(router, 'GET',  '/users/42')                  # [200, "User 42"]
+puts request(router, 'GET',  '/users/42/posts/7')          # [200, "Post 7 by user 42"]
+puts request(router, 'POST', '/users')                     # [201, "Created"]
+puts request(router, 'GET',  '/nonexistent')               # [404, "Not Found"]
+</code></pre>
+<h2 id="the-regex-trick"><a class="header" href="#the-regex-trick">The Regex Trick</a></h2>
+<p>The pattern translation deserves a closer look:</p>
+<pre><code class="language-ruby">pattern = '/users/:id/posts/:post_id'
+
+# Step 1: Replace :param with a named capture group
+regex_str = pattern.gsub(/:(\w+)/, '(?&lt;\1&gt;[^/]+)')
+# =&gt; "/users/(?&lt;id&gt;[^/]+)/posts/(?&lt;post_id&gt;[^/]+)"
+
+# Step 2: Anchor it
+regex = Regexp.new("\\A#{regex_str}\\z")
+# =&gt; /\A\/users\/(?&lt;id&gt;[^\/]+)\/posts\/(?&lt;post_id&gt;[^\/]+)\z/
+
+# Test it
+match = regex.match('/users/42/posts/7')
+match.named_captures   # =&gt; {"id"=&gt;"42", "post_id"=&gt;"7"}
+</code></pre>
+<p><code>[^/]+</code> matches one or more characters that aren't a slash — which is what a URL segment is. Named captures (the <code>?&lt;name&gt;</code> syntax) let us extract those values by name.</p>
+<p>This is what every Ruby routing library does underneath. Some add wildcard matching (<code>*path</code>), optional segments (<code>(/edit)?</code>), or format matching (<code>.json</code>). The core is always the same regex transform.</p>
+<h2 id="constraint-based-routing"><a class="header" href="#constraint-based-routing">Constraint-Based Routing</a></h2>
+<p>Rails routes support constraints like <code>id: /\d+/</code>. We can add that:</p>
+<pre><code class="language-ruby">def add(method, pattern, constraints: {}, &amp;handler)
+  # Build base regex, replacing :param with a named capture
+  regex_str = pattern.gsub(/:(\w+)/) do |match|
+    param_name = $1
+    # Use constraint regex if provided, otherwise match any non-slash chars
+    param_pattern = constraints[param_name.to_sym]&amp;.source || '[^/]+'
+    "(?&lt;#{param_name}&gt;#{param_pattern})"
+  end
+
+  regex = Regexp.new("\\A#{regex_str}\\z")
+  @routes &lt;&lt; {method: method, pattern: regex, handler: handler}
+end
+
+# Usage: only match numeric IDs
+router.get('/users/:id', constraints: {id: /\d+/}) do |env, params|
+  [200, {}, ["User #{params['id']}"]]
+end
+
+# This matches:   GET /users/42
+# This doesn't:   GET /users/alice
+</code></pre>
+<h2 id="mounting-rack-apps-at-paths"><a class="header" href="#mounting-rack-apps-at-paths">Mounting Rack Apps at Paths</a></h2>
+<p>Routing isn't just about handlers — you can route to entire Rack applications:</p>
+<pre><code class="language-ruby">class PathRouter
+  def initialize
+    @mounts = []
+    @routes = []
+  end
+
+  def mount(path, app)
+    @mounts &lt;&lt; {prefix: path, app: app}
+  end
+
+  def call(env)
+    path = env['PATH_INFO']
+
+    # Check mounts first — rewrite PATH_INFO for the mounted app
+    @mounts.each do |mount|
+      if path.start_with?(mount[:prefix])
+        env = env.merge(
+          'SCRIPT_NAME' =&gt; env['SCRIPT_NAME'] + mount[:prefix],
+          'PATH_INFO'   =&gt; path.sub(mount[:prefix], '') || '/',
+        )
+        return mount[:app].call(env)
+      end
+    end
+
+    # Then check plain routes
+    # ... (same as before)
+    
+    [404, {'Content-Type' =&gt; 'text/plain'}, ['Not Found']]
+  end
+end
+
+# Example:
+router = PathRouter.new
+router.mount('/api/v1', ApiApp.new)
+router.mount('/admin', AdminApp.new)
+</code></pre>
+<p>This is exactly how Rails's <code>mount</code> directive works. <code>SCRIPT_NAME</code> tracks how much of the path has been consumed by the routing layer, and <code>PATH_INFO</code> contains the remaining path for the mounted app to interpret.</p>
+<h2 id="a-full-featured-example"><a class="header" href="#a-full-featured-example">A Full-Featured Example</a></h2>
+<p>Let's build a complete router that a small real application could actually use:</p>
+<pre><code class="language-ruby"># router.rb
+class Router
+  Route = Struct.new(:method, :pattern, :named_params, :handler)
+
+  def initialize
+    @routes = []
+    @not_found = method(:default_not_found)
+    @error     = method(:default_error)
+  end
+
+  def get(path, &amp;block)    = define('GET',    path, &amp;block)
+  def post(path, &amp;block)   = define('POST',   path, &amp;block)
+  def put(path, &amp;block)    = define('PUT',    path, &amp;block)
+  def patch(path, &amp;block)  = define('PATCH',  path, &amp;block)
+  def delete(path, &amp;block) = define('DELETE', path, &amp;block)
+  def head(path, &amp;block)   = define('HEAD',   path, &amp;block)
+
+  def not_found(&amp;block) = (@not_found = block)
+  def error(&amp;block)     = (@error     = block)
+
+  def call(env)
+    method = env['REQUEST_METHOD']
+    path   = env['PATH_INFO'].chomp('/')
+    path   = '/' if path.empty?
+
+    @routes.each do |route|
+      next unless route.method == method || (method == 'HEAD' &amp;&amp; route.method == 'GET')
+
+      if (match = route.pattern.match(path))
+        params = match.named_captures
+        env['router.params'] = params
+        return route.handler.call(env, params)
+      end
+    end
+
+    @not_found.call(env)
+  rescue StandardError =&gt; e
+    @error.call(env, e)
+  end
+
+  private
+
+  def define(method, path, &amp;handler)
+    named_params = path.scan(/:(\w+)/).flatten
+    pattern_str  = path.gsub(/:(\w+)/, '(?&lt;\1&gt;[^/]+)')
+    pattern      = Regexp.new("\\A#{pattern_str}\\z")
+    @routes &lt;&lt; Route.new(method, pattern, named_params, handler)
+  end
+
+  def default_not_found(env)
+    [404, {'Content-Type' =&gt; 'text/plain'}, ['Not Found']]
+  end
+
+  def default_error(env, exception)
+    $stderr.puts "#{exception.class}: #{exception.message}"
+    $stderr.puts exception.backtrace.first(10).join("\n")
+    [500, {'Content-Type' =&gt; 'text/plain'}, ['Internal Server Error']]
+  end
+end
+</code></pre>
+<p>Use it as a Rack app:</p>
+<pre><code class="language-ruby"># config.ru
+require_relative 'router'
+require_relative 'handlers'  # wherever your handler code lives
+
+router = Router.new
+
+router.get('/') do |env, params|
+  [200, {'Content-Type' =&gt; 'text/html'}, ['&lt;h1&gt;Home&lt;/h1&gt;']]
+end
+
+router.get('/users/:id') do |env, params|
+  user = User.find(params['id'].to_i)
+  [200, {'Content-Type' =&gt; 'application/json'}, [user.to_json]]
+end
+
+router.not_found do |env|
+  [404, {'Content-Type' =&gt; 'text/html'}, ['&lt;h1&gt;Page Not Found&lt;/h1&gt;']]
+end
+
+run router
+</code></pre>
+<h2 id="what-frameworks-add-on-top"><a class="header" href="#what-frameworks-add-on-top">What Frameworks Add on Top</a></h2>
+<p>Our router covers the basics. Here's what Rails's and Sinatra's routers add:</p>
+<p><strong>Named routes and URL helpers</strong>: <code>user_path(id: 42)</code> instead of <code>"/users/#{42}"</code>. This requires storing route patterns as templates, not just regexes.</p>
+<p><strong>Nested resources</strong>: <code>resources :users do; resources :posts; end</code> generates all CRUD routes for posts nested under users. Our router requires you to define each route manually.</p>
+<p><strong>Route priorities and overrides</strong>: When multiple routes could match, Rails has a precise priority order. Our router uses first-match-wins, which is simpler but less flexible.</p>
+<p><strong>Format matching</strong>: Rails can route <code>GET /users/42.json</code> differently from <code>GET /users/42</code>, based on the format suffix or <code>Accept</code> header.</p>
+<p><strong>Redirect and inline responders</strong>: <code>get '/old', redirect('/new')</code> in Sinatra.</p>
+<p><strong>Route constraints with arbitrary code</strong>: Rails lets you pass lambdas as constraints.</p>
+<p>These are real features that real applications use. They're also each independently implementable on top of what we've built — the router isn't magical, it's just accreted features.</p>
+<h2 id="the-insight-2"><a class="header" href="#the-insight-2">The Insight</a></h2>
+<p>A router is a list of <code>(method, pattern, handler)</code> tuples. Matching is: iterate the list, test each pattern against the incoming path, run the first match. Everything else is optimization or ergonomics.</p>
+<p>When you see a routing DSL — <code>resources :users</code>, <code>namespace :api</code>, <code>scope '/v2'</code> — it's generating these tuples. The DSL exists because writing tuples manually is tedious at scale. But it's still tuples.</p>
+<p>If you ever need to debug a routing issue, you can inspect the generated routes. In Rails: <code>Rails.application.routes.routes</code> gives you the raw route list. In Sinatra: <code>MyApp.routes</code> shows all defined routes. You're looking at the tuples.</p>
+<p>Next: making request and response handling a little less manual.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="request-and-response-objects-diy-edition"><a class="header" href="#request-and-response-objects-diy-edition">Request and Response Objects (DIY Edition)</a></h1>
+<p>By now you've been reading <code>env['REQUEST_METHOD']</code> and returning <code>[200, headers, body]</code> directly. This works, but it's verbose. Real applications build thin wrapper objects around the raw data structures to make the common cases easier.</p>
+<p>The <code>rack</code> gem ships with <code>Rack::Request</code> and <code>Rack::Response</code>. They're good. But let's build our own versions first, so we understand what they're doing and why.</p>
+<h2 id="the-problem-with-raw-env"><a class="header" href="#the-problem-with-raw-env">The Problem with Raw Env</a></h2>
+<p>Accessing request data from the raw env hash has a few annoyances:</p>
+<pre><code class="language-ruby"># Reading headers is inconsistent
+host         = env['HTTP_HOST']            # most headers
+content_type = env['CONTENT_TYPE']        # except Content-Type
+content_len  = env['CONTENT_LENGTH']      # and Content-Length
+
+# Checking HTTP method
+is_get  = env['REQUEST_METHOD'] == 'GET'
+is_post = env['REQUEST_METHOD'] == 'POST'
+
+# Reading the body (destructive! can only read once)
+body = env['rack.input'].read
+
+# Parsing query string
+require 'uri'
+params = URI.decode_www_form(env['QUERY_STRING']).to_h
+
+# Getting the full URL
+scheme = env['rack.url_scheme']
+host   = env['HTTP_HOST']
+path   = env['PATH_INFO']
+qs     = env['QUERY_STRING']
+url    = "#{scheme}://#{host}#{path}"
+url   += "?#{qs}" unless qs.empty?
+</code></pre>
+<p>None of this is wrong, but it's tedious. A request object wraps these lookups in named methods.</p>
+<h2 id="building-a-request-wrapper"><a class="header" href="#building-a-request-wrapper">Building a Request Wrapper</a></h2>
+<pre><code class="language-ruby">class Request
+  attr_reader :env
+
+  def initialize(env)
+    @env = env
+  end
+
+  # HTTP method
+  def request_method = env['REQUEST_METHOD']
+  def get?    = request_method == 'GET'
+  def post?   = request_method == 'POST'
+  def put?    = request_method == 'PUT'
+  def patch?  = request_method == 'PATCH'
+  def delete? = request_method == 'DELETE'
+  def head?   = request_method == 'HEAD'
+
+  # Path and query
+  def path         = env['PATH_INFO']
+  def query_string = env['QUERY_STRING']
+  def script_name  = env['SCRIPT_NAME']
+  def full_path    = query_string.empty? ? path : "#{path}?#{query_string}"
+
+  # URL construction
+  def scheme = env['rack.url_scheme'] || 'http'
+  def host   = env['HTTP_HOST'] || env['SERVER_NAME']
+  def port   = env['SERVER_PORT']
+  def url    = "#{scheme}://#{host}#{full_path}"
+
+  # Headers (Rack-normalized: HTTP_ACCEPT -&gt; Accept)
+  def headers
+    @headers ||= env.each_with_object({}) do |(key, value), h|
+      if key.start_with?('HTTP_')
+        name = key.sub('HTTP_', '').split('_').map(&amp;:capitalize).join('-')
+        h[name] = value
+      elsif key == 'CONTENT_TYPE'
+        h['Content-Type'] = value
+      elsif key == 'CONTENT_LENGTH'
+        h['Content-Length'] = value
+      end
+    end
+  end
+
+  def content_type   = env['CONTENT_TYPE']
+  def content_length = env['CONTENT_LENGTH']&amp;.to_i
+
+  # Individual header lookup — normalizes to Rack format
+  def [](header_name)
+    key = "HTTP_#{header_name.upcase.tr('-', '_')}"
+    env[key] || env[header_name.upcase.tr('-', '_')]
+  end
+
+  # Query parameters (parsed and decoded)
+  def query_params
+    @query_params ||= parse_query(query_string)
+  end
+
+  # POST body params (for application/x-www-form-urlencoded)
+  def post_params
+    @post_params ||= if content_type&amp;.include?('application/x-www-form-urlencoded')
+      parse_query(body_string)
+    else
+      {}
+    end
+  end
+
+  # Merged params: query + post body (query takes precedence on collision)
+  def params
+    @params ||= post_params.merge(query_params)
+  end
+
+  # Raw body (reads once, then cached)
+  def body
+    env['rack.input']
+  end
+
+  def body_string
+    @body_string ||= begin
+      body.rewind  # reset in case it was partially read
+      body.read
+    end
+  end
+
+  # JSON body parsing
+  def json
+    @json ||= if content_type&amp;.include?('application/json')
+      require 'json'
+      JSON.parse(body_string)
+    end
+  end
+
+  # Cookies
+  def cookies
+    @cookies ||= parse_cookies(env['HTTP_COOKIE'] || '')
+  end
+
+  # IP address (respects X-Forwarded-For if behind a proxy)
+  def ip
+    env['HTTP_X_FORWARDED_FOR']&amp;.split(',')&amp;.first&amp;.strip ||
+      env['REMOTE_ADDR']
+  end
+
+  # Is this an AJAX request?
+  def xhr?
+    env['HTTP_X_REQUESTED_WITH']&amp;.downcase == 'xmlhttprequest'
+  end
+
+  # What content types does the client accept?
+  def accepts?(mime_type)
+    accept = env['HTTP_ACCEPT'] || '*/*'
+    accept.include?(mime_type) || accept.include?('*/*')
+  end
+
+  private
+
+  def parse_query(string)
+    return {} if string.nil? || string.empty?
+    require 'uri'
+    URI.decode_www_form(string).each_with_object({}) do |(k, v), h|
+      if h.key?(k)
+        h[k] = Array(h[k]) &lt;&lt; v
+      else
+        h[k] = v
+      end
+    end
+  end
+
+  def parse_cookies(string)
+    string.split('; ').each_with_object({}) do |pair, h|
+      name, value = pair.split('=', 2)
+      h[name] = value if name
+    end
+  end
+end
+</code></pre>
+<h2 id="building-a-response-helper"><a class="header" href="#building-a-response-helper">Building a Response Helper</a></h2>
+<p>The response is <code>[status, headers, body]</code>. Building it manually is fine for simple cases but gets tedious when you're setting multiple headers or building the body incrementally.</p>
+<pre><code class="language-ruby">class Response
+  attr_accessor :status
+  attr_reader :headers
+
+  def initialize(status = 200, headers = {})
+    @status  = status
+    @headers = {'Content-Type' =&gt; 'text/html; charset=utf-8'}.merge(headers)
+    @body    = []
+    @finished = false
+  end
+
+  # Write to the body buffer
+  def write(str)
+    raise 'Response already finished' if @finished
+    @body &lt;&lt; str.to_s
+    self
+  end
+
+  def &lt;&lt;(str) = write(str)
+
+  # Set a header
+  def []=(name, value)
+    @headers[name] = value
+  end
+
+  def [](name)
+    @headers[name]
+  end
+
+  # Common response types
+  def set_cookie(name, value, options = {})
+    cookie = "#{name}=#{value}"
+    cookie += "; Path=#{options[:path] || '/'}"
+    cookie += "; HttpOnly" if options[:http_only] != false
+    cookie += "; Secure"   if options[:secure]
+    cookie += "; SameSite=#{options[:same_site]}" if options[:same_site]
+    if options[:expires]
+      cookie += "; Expires=#{options[:expires].httpdate}"
+    end
+    # Multiple Set-Cookie headers need to be handled carefully
+    existing = @headers['Set-Cookie']
+    @headers['Set-Cookie'] = existing ? "#{existing}\n#{cookie}" : cookie
+  end
+
+  def delete_cookie(name)
+    set_cookie(name, '', expires: Time.at(0))
+  end
+
+  # Redirect helpers
+  def redirect(location, status = 302)
+    @status = status
+    @headers['Location'] = location
+    @body = []
+    self
+  end
+
+  # Finish: set Content-Length and return the Rack triple
+  def finish
+    @finished = true
+    body = @body
+
+    unless @headers['Content-Length']
+      size = body.sum(&amp;:bytesize)
+      @headers['Content-Length'] = size.to_s
+    end
+
+    [@status, @headers, body]
+  end
+
+  # Convenience: finish with a body written all at once
+  def self.text(body, status: 200)
+    r = new(status, 'Content-Type' =&gt; 'text/plain')
+    r.write(body)
+    r.finish
+  end
+
+  def self.html(body, status: 200)
+    r = new(status, 'Content-Type' =&gt; 'text/html; charset=utf-8')
+    r.write(body)
+    r.finish
+  end
+
+  def self.json(data, status: 200)
+    require 'json'
+    body = JSON.generate(data)
+    r = new(status, 'Content-Type' =&gt; 'application/json')
+    r.write(body)
+    r.finish
+  end
+
+  def self.redirect(location, status: 302)
+    r = new(status)
+    r.redirect(location, status)
+    r.finish
+  end
+end
+</code></pre>
+<h2 id="using-them-together"><a class="header" href="#using-them-together">Using Them Together</a></h2>
+<p>Here's our NotesApp rewritten with these helpers:</p>
+<pre><code class="language-ruby">require_relative 'request'
+require_relative 'response'
+require 'json'
+
+class NotesApp
+  def initialize
+    @notes  = {}
+    @next_id = 1
+  end
+
+  def call(env)
+    req = Request.new(env)
+
+    case [req.request_method, req.path]
+    when ['GET', '/notes']
+      Response.json(@notes.values)
+
+    when ['POST', '/notes']
+      create_note(req)
+
+    else
+      if (match = req.path.match(%r{\A/notes/(\d+)\z}))
+        id = match[1].to_i
+        case req.request_method
+        when 'GET'    then show_note(id)
+        when 'DELETE' then delete_note(id)
+        else Response.json({'error' =&gt; 'Method not allowed'}, status: 405)
+        end
+      else
+        Response.json({'error' =&gt; 'Not found'}, status: 404)
+      end
+    end
+  end
+
+  private
+
+  def show_note(id)
+    note = @notes[id]
+    return Response.json({'error' =&gt; 'Not found'}, status: 404) unless note
+    Response.json(note)
+  end
+
+  def create_note(req)
+    data = req.json
+    return Response.json({'error' =&gt; 'Invalid JSON'}, status: 400) unless data
+
+    note = {
+      'id'      =&gt; @next_id,
+      'content' =&gt; data['content'].to_s,
+      'created' =&gt; Time.now.iso8601,
+    }
+    @notes[@next_id] = note
+    @next_id += 1
+
+    Response.json(note, status: 201)
+  rescue JSON::ParserError
+    Response.json({'error' =&gt; 'Invalid JSON'}, status: 400)
+  end
+
+  def delete_note(id)
+    return Response.json({'error' =&gt; 'Not found'}, status: 404) unless @notes.key?(id)
+    @notes.delete(id)
+    [204, {}, []]
+  end
+end
+</code></pre>
+<p>Cleaner. <code>req.json</code> instead of <code>JSON.parse(env['rack.input'].read)</code>. <code>Response.json(data)</code> instead of the three-line array construction.</p>
+<h2 id="racks-built-in-versions"><a class="header" href="#racks-built-in-versions">Rack's Built-in Versions</a></h2>
+<p><code>Rack::Request</code> and <code>Rack::Response</code> do everything above, plus:</p>
+<ul>
+<li><code>Rack::Request#params</code> handles multipart form data (file uploads)</li>
+<li><code>Rack::Request#session</code> accesses the session (set by session middleware)</li>
+<li><code>Rack::Response</code> handles <code>Transfer-Encoding: chunked</code> for streaming</li>
+<li>Both handle edge cases in encoding and parsing that our implementations skip</li>
+</ul>
+<p>There's no reason to use our versions in production. But now you know what they are: thin wrappers that make the env hash and response array more ergonomic. Not magic. Not framework infrastructure. Just Ruby objects.</p>
+<h2 id="the-body-is-lazy"><a class="header" href="#the-body-is-lazy">The Body Is Lazy</a></h2>
+<p>One important detail about the response body: it's supposed to be lazy. The Rack spec says the body responds to <code>each</code>, and the server calls <code>each</code> to get the chunks. It doesn't have to be an Array.</p>
+<p>This means you can stream large responses without loading everything into memory:</p>
+<pre><code class="language-ruby">class FileStreamer
+  def initialize(path)
+    @path = path
+  end
+
+  def each
+    File.open(@path, 'rb') do |file|
+      while (chunk = file.read(16_384))  # read 16KB at a time
+        yield chunk
+      end
+    end
+  end
+
+  def close
+    # nothing to close — File.open handles it
+  end
+end
+
+# In a Rack app:
+def call(env)
+  [
+    200,
+    {
+      'Content-Type'        =&gt; 'application/octet-stream',
+      'Content-Disposition' =&gt; 'attachment; filename="large_file.bin"',
+    },
+    FileStreamer.new('/path/to/large_file.bin')
+  ]
+end
+</code></pre>
+<p>The server calls <code>.each</code> on the body, yields chunks to the client as they're read, and memory usage stays flat even for multi-gigabyte files. <code>Rack::Sendfile</code> takes this further — if the server supports it, you tell the server the file path and the server handles the streaming at the OS level, bypassing Ruby entirely.</p>
+<h2 id="the-insight-3"><a class="header" href="#the-insight-3">The Insight</a></h2>
+<p>Request and response objects are not architecture — they're ergonomics. The underlying data structures are still a hash and an array. The wrappers exist so you don't have to remember that <code>Content-Type</code> uses a different env key format than other headers, or that the body needs <code>Content-Length</code> set, or that <code>rack.input</code> might need to be rewound before reading.</p>
+<p>When <code>Rack::Request</code> or <code>Rack::Response</code> does something unexpected, you can read its source. It's a short file. It's doing exactly what we just did.</p>
+<p>This concludes the Rack section. You've seen the spec, built apps against it, written a server, implemented middleware, built a router, and wrapped the env in ergonomic objects. You know what's happening.</p>
+<p>Next: why Rack alone still isn't quite enough for most applications.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="why-rack-alone-isnt-enough"><a class="header" href="#why-rack-alone-isnt-enough">Why Rack Alone Isn't Enough</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-routing-tree-rodas-big-idea"><a class="header" href="#the-routing-tree-rodas-big-idea">The Routing Tree (Roda's Big Idea)</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="your-first-roda-app"><a class="header" href="#your-first-roda-app">Your First Roda App</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rodas-plugin-system-opt-in-everything"><a class="header" href="#rodas-plugin-system-opt-in-everything">Roda's Plugin System (Opt-In Everything)</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="middleware-in-roda"><a class="header" href="#middleware-in-roda">Middleware in Roda</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="testing-roda-apps"><a class="header" href="#testing-roda-apps">Testing Roda Apps</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="roll-your-own-mini-framework-for-fun-and-understanding"><a class="header" href="#roll-your-own-mini-framework-for-fun-and-understanding">Roll Your Own Mini-Framework (For Fun and Understanding)</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rails-vs-sinatra-vs-roda-now-that-you-know-what-they-are"><a class="header" href="#rails-vs-sinatra-vs-roda-now-that-you-know-what-they-are">Rails vs Sinatra vs Roda (Now That You Know What They Are)</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="you-know-too-much-now"><a class="header" href="#you-know-too-much-now">You Know Too Much Now</a></h1>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Middleware: Turtles All the Way Down - Rack, Roda, and Ruby</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Rails is just a callable. Sinatra is just a callable. So is Roda. This book strips away the magic of Ruby web development, shows you exactly what Rack is doing under the hood, and teaches you to build from first principles. Know your tools. Really know them.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rack, Roda, and Ruby</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby/edit/main/src/rack/middleware.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="middleware-turtles-all-the-way-down"><a class="header" href="#middleware-turtles-all-the-way-down">Middleware: Turtles All the Way Down</a></h1>
+<p>Middleware is the most overloaded term in web development. In Rack's context, it has a precise meaning: a middleware is a Rack application that wraps another Rack application.</p>
+<p>That's it. An object with a <code>call</code> method that receives an inner app in its initializer, delegates to it, and adds some behavior before or after (or instead of) that delegation.</p>
+<h2 id="the-pattern"><a class="header" href="#the-pattern">The Pattern</a></h2>
+<pre><code class="language-ruby">class MyMiddleware
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    # Do something before the inner app runs
+    
+    status, headers, body = @app.call(env)
+    
+    # Do something after the inner app runs
+    
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>This is the complete middleware pattern. Everything else is elaboration.</p>
+<p>The <code>initialize</code> method receives the next application in the chain. The <code>call</code> method can:</p>
+<ul>
+<li>Inspect or modify <code>env</code> before passing it down</li>
+<li>Decide not to call <code>@app</code> at all (short-circuit)</li>
+<li>Inspect or modify the <code>[status, headers, body]</code> before returning it up</li>
+<li>Call <code>@app</code> multiple times (for retry logic)</li>
+<li>Do work in a separate thread (for async logging)</li>
+</ul>
+<h2 id="a-real-example-request-logging"><a class="header" href="#a-real-example-request-logging">A Real Example: Request Logging</a></h2>
+<pre><code class="language-ruby">class RequestLogger
+  def initialize(app, logger: $stdout)
+    @app    = app
+    @logger = logger
+  end
+
+  def call(env)
+    start  = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    method = env['REQUEST_METHOD']
+    path   = env['PATH_INFO']
+    
+    status, headers, body = @app.call(env)
+    
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    ms = (elapsed * 1000).round(1)
+
+    @logger.puts "[#{Time.now.strftime('%H:%M:%S')}] #{method} #{path} → #{status} (#{ms}ms)"
+
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>Use it:</p>
+<pre><code class="language-ruby"># config.ru
+require_relative 'app'
+require_relative 'request_logger'
+
+use RequestLogger
+run NotesApp.new
+</code></pre>
+<p>Now every request is logged:</p>
+<pre><code>[12:00:00] GET /notes → 200 (0.3ms)
+[12:00:01] POST /notes → 201 (0.8ms)
+[12:00:02] GET /notes/1 → 200 (0.2ms)
+[12:00:03] DELETE /notes/1 → 204 (0.1ms)
+[12:00:04] GET /notes/999 → 404 (0.1ms)
+</code></pre>
+<p>The application knows nothing about this. <code>NotesApp</code> didn't change. The logging behavior is composed around it.</p>
+<h2 id="a-real-example-authentication"><a class="header" href="#a-real-example-authentication">A Real Example: Authentication</a></h2>
+<pre><code class="language-ruby">class BasicAuth
+  def initialize(app, realm:, credentials:)
+    @app         = app
+    @realm       = realm
+    @credentials = credentials  # { username =&gt; password }
+  end
+
+  def call(env)
+    auth = env['HTTP_AUTHORIZATION']
+
+    if auth &amp;&amp; auth.start_with?('Basic ')
+      encoded = auth.sub('Basic ', '')
+      username, password = Base64.decode64(encoded).split(':', 2)
+
+      if @credentials[username] == password
+        # Auth success — pass through to the app
+        env['authenticated_user'] = username
+        return @app.call(env)
+      end
+    end
+
+    # Auth failed — short-circuit, don't call the inner app
+    [
+      401,
+      {
+        'Content-Type'     =&gt; 'text/plain',
+        'WWW-Authenticate' =&gt; "Basic realm=\"#{@realm}\"",
+      },
+      ['Unauthorized']
+    ]
+  end
+end
+</code></pre>
+<p>Use it:</p>
+<pre><code class="language-ruby"># config.ru
+require 'base64'
+require_relative 'app'
+require_relative 'basic_auth'
+
+use BasicAuth,
+  realm: 'Notes API',
+  credentials: { 'admin' =&gt; 'secret' }
+
+run NotesApp.new
+</code></pre>
+<p>Now:</p>
+<pre><code class="language-bash"># No credentials
+$ curl -s http://localhost:9292/notes
+Unauthorized
+
+# Wrong password
+$ curl -s -u admin:wrong http://localhost:9292/notes
+Unauthorized
+
+# Correct credentials
+$ curl -s -u admin:secret http://localhost:9292/notes
+[]
+</code></pre>
+<p>The inner app still knows nothing about authentication. <code>NotesApp</code> didn't change. Authentication is entirely handled in the middleware layer.</p>
+<h2 id="a-real-example-response-time-header"><a class="header" href="#a-real-example-response-time-header">A Real Example: Response Time Header</a></h2>
+<pre><code class="language-ruby">class ResponseTime
+  HEADER = 'X-Response-Time'.freeze
+
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    status, headers, body = @app.call(env)
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+
+    headers[HEADER] = "#{(elapsed * 1000).round(2)}ms"
+
+    [status, headers, body]
+  end
+end
+</code></pre>
+<p>This modifies the <em>response</em> rather than the request. It adds a header after the inner app runs.</p>
+<h2 id="composing-multiple-middlewares"><a class="header" href="#composing-multiple-middlewares">Composing Multiple Middlewares</a></h2>
+<p>When you <code>use</code> multiple middlewares in <code>config.ru</code>, they nest:</p>
+<pre><code class="language-ruby"># config.ru
+use ResponseTime
+use RequestLogger
+use BasicAuth, realm: 'Notes', credentials: { 'user' =&gt; 'pass' }
+run NotesApp.new
+</code></pre>
+<p>The call stack for a request is:</p>
+<pre><code>ResponseTime.call(env)
+  RequestLogger.call(env)
+    BasicAuth.call(env)
+      NotesApp.call(env)    # only if auth passes
+    BasicAuth returns [status, headers, body]
+  RequestLogger returns [status, headers, body] (after logging)
+ResponseTime returns [status, headers, body] (after adding X-Response-Time)
+</code></pre>
+<p>The first <code>use</code> is the outermost layer. The <code>run</code> is the innermost. Middleware added first wraps everything else.</p>
+<p>This has a non-obvious implication: <strong><code>RequestLogger</code> runs inside <code>ResponseTime</code></strong>. If <code>RequestLogger</code> adds 0.1ms of overhead, that overhead is included in the response time that <code>ResponseTime</code> measures. Whether that's what you want depends on what you're measuring.</p>
+<h2 id="building-a-middleware-stack-manually"><a class="header" href="#building-a-middleware-stack-manually">Building a Middleware Stack Manually</a></h2>
+<p><code>Rack::Builder</code> (what <code>config.ru</code> uses) is just a class that builds a chain of middlewares. We can do it manually to see the structure:</p>
+<pre><code class="language-ruby">require_relative 'app'
+require_relative 'request_logger'
+require_relative 'response_time'
+
+# Build the stack by hand — innermost to outermost
+inner  = NotesApp.new
+logged = RequestLogger.new(inner)
+timed  = ResponseTime.new(logged)
+
+# timed is the outermost app — this is what the server calls
+status, headers, body = timed.call(env)
+</code></pre>
+<p>Or using <code>Rack::Builder</code> directly:</p>
+<pre><code class="language-ruby">app = Rack::Builder.new do
+  use ResponseTime
+  use RequestLogger
+  run NotesApp.new
+end
+
+# app.call(env) now goes through the whole stack
+</code></pre>
+<p><code>Rack::Builder</code> does exactly what we did manually — it builds a chain of closures, each wrapping the next.</p>
+<h2 id="middleware-from-the-rack-gem"><a class="header" href="#middleware-from-the-rack-gem">Middleware from the Rack Gem</a></h2>
+<p>The <code>rack</code> gem ships with a set of useful middlewares:</p>
+<pre><code class="language-ruby"># Adds X-Runtime header (response time)
+use Rack::Runtime
+
+# Rewrites POST bodies with _method=DELETE to DELETE requests
+use Rack::MethodOverride
+
+# Adds ETag and Last-Modified for conditional GET support
+use Rack::ConditionalGet
+use Rack::ETag
+
+# Compresses responses with gzip when client supports it
+use Rack::Deflater
+
+# Serves static files from ./public
+use Rack::Static, urls: ['/assets'], root: 'public'
+
+# Basic request/response logging
+use Rack::CommonLogger
+
+# Cookie-based sessions
+use Rack::Session::Cookie, secret: 'your_secret_key'
+</code></pre>
+<p>These are all just implementations of the same pattern: initialize with <code>app</code>, implement <code>call</code>.</p>
+<h2 id="middleware-order-matters"><a class="header" href="#middleware-order-matters">Middleware Order Matters</a></h2>
+<pre><code class="language-ruby"># WRONG order: Static serves before auth check
+use Rack::Static, urls: ['/admin/files']
+use BasicAuth, realm: 'Admin'
+run AdminApp.new
+
+# RIGHT order: Auth runs first, wraps everything including Static
+use BasicAuth, realm: 'Admin'
+use Rack::Static, urls: ['/admin/files']
+run AdminApp.new
+</code></pre>
+<p>In the wrong order, requests to <code>/admin/files/secret.pdf</code> bypass authentication because <code>Rack::Static</code> intercepts them before <code>BasicAuth</code> gets a chance to check credentials.</p>
+<p>This kind of bug is especially fun to debug when you inherited the codebase.</p>
+<h2 id="conditional-middleware"><a class="header" href="#conditional-middleware">Conditional Middleware</a></h2>
+<p>Sometimes you want middleware only in certain environments:</p>
+<pre><code class="language-ruby"># config.ru
+if ENV['RACK_ENV'] == 'development'
+  use Rack::Lint       # validates Rack compliance — catches your bugs
+  use RequestLogger
+end
+
+use Rack::Session::Cookie, secret: ENV.fetch('SESSION_SECRET')
+run MyApp.new
+</code></pre>
+<p><code>Rack::Lint</code> is particularly useful during development — it validates that your app and middleware are conforming to the spec and raises helpful errors when they don't.</p>
+<h2 id="writing-middleware-that-passes-options"><a class="header" href="#writing-middleware-that-passes-options">Writing Middleware That Passes Options</a></h2>
+<p>A common pattern is passing configuration at use-time:</p>
+<pre><code class="language-ruby">class RateLimiter
+  def initialize(app, limit: 100, window: 60)
+    @app    = app
+    @limit  = limit
+    @window = window
+    @counts = Hash.new(0)
+    @mutex  = Mutex.new
+  end
+
+  def call(env)
+    ip = env['REMOTE_ADDR']
+
+    @mutex.synchronize do
+      @counts[ip] += 1
+
+      if @counts[ip] &gt; @limit
+        return [
+          429,
+          {'Content-Type' =&gt; 'text/plain', 'Retry-After' =&gt; @window.to_s},
+          ['Too Many Requests']
+        ]
+      end
+    end
+
+    @app.call(env)
+  end
+end
+
+# In config.ru:
+use RateLimiter, limit: 50, window: 30
+</code></pre>
+<p>The <code>initialize</code> arguments after <code>app</code> are the middleware's configuration options. <code>Rack::Builder</code> passes them through when you write <code>use RateLimiter, limit: 50</code>.</p>
+<h2 id="the-insight"><a class="header" href="#the-insight">The Insight</a></h2>
+<p>Here's what took me too long to realize: <strong>middleware is just objects calling other objects.</strong> There's no framework magic. There's no DSL. There's no reflection or code generation. It's a chain of Ruby objects where each one holds a reference to the next and delegates to it.</p>
+<p>When you understand this, you can:</p>
+<ul>
+<li>Read any middleware and understand it immediately</li>
+<li>Write middleware that does exactly what you need</li>
+<li>Debug middleware issues by temporarily removing layers</li>
+<li>Understand why middleware order matters</li>
+</ul>
+<p>The entire Rack ecosystem — gems, frameworks, servers — is built on this pattern. A Rails app with 20 middlewares is just 20 objects arranged in a chain. When something goes wrong in that chain, you now know how to find it.</p>
+<p>Next: what those middlewares are usually protecting — your routing.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../rack/server-from-scratch.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../rack/routing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../rack/server-from-scratch.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../rack/routing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

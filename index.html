@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Introduction - Rack, Roda, and Ruby</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Rails is just a callable. Sinatra is just a callable. So is Roda. This book strips away the magic of Ruby web development, shows you exactly what Rack is doing under the hood, and teaches you to build from first principles. Know your tools. Really know them.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rack, Roda, and Ruby</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby/edit/main/src/introduction.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="the-lie-youve-been-living"><a class="header" href="#the-lie-youve-been-living">The Lie You've Been Living</a></h1>
+<p>Let's start with a confession: Rails is a callable.</p>
+<p>Not metaphorically. Not "if you squint at it." Literally, mechanically, by definition — Rails is an object that responds to <code>call</code>. You pass it a hash, it returns an array. That's the whole thing. The routing DSL, the ActiveRecord integration, the asset pipeline, the mailers — all of it exists so that one <code>call</code> method can do something useful.</p>
+<p>Here's the proof:</p>
+<pre><code class="language-ruby"># config/environment.rb loads your Rails app
+require_relative '../config/environment'
+
+# This is your entire Rails application
+app = Rails.application
+
+# It responds to call
+app.respond_to?(:call) # =&gt; true
+
+# Call it directly with a minimal Rack environment
+env = {
+  'REQUEST_METHOD' =&gt; 'GET',
+  'PATH_INFO'      =&gt; '/',
+  'rack.input'     =&gt; StringIO.new,
+  'SERVER_NAME'    =&gt; 'localhost',
+  'SERVER_PORT'    =&gt; '3000',
+  'HTTP_VERSION'   =&gt; 'HTTP/1.1',
+}
+
+status, headers, body = app.call(env)
+
+puts status   # 200
+puts headers  # {"Content-Type" =&gt; "text/html; charset=utf-8", ...}
+body.each { |chunk| print chunk } # your HTML
+</code></pre>
+<p>Run that in a Rails console. It works. No HTTP required, no browser, no WEBrick. Just a hash in and an array out.</p>
+<p>This is not a party trick. This is the entire basis of Ruby web development, and understanding it changes how you read framework code, debug middleware issues, and make architectural decisions.</p>
+<h2 id="why-this-matters"><a class="header" href="#why-this-matters">Why This Matters</a></h2>
+<p>You've probably been writing Ruby web applications for a while. You know how to define routes, render templates, write controllers, handle authentication. You're productive. The framework handles the HTTP layer and you work at the application layer, which is exactly the correct division of labor in production.</p>
+<p>The problem is that "the framework handles it" is a sentence that stops you from understanding what's actually happening. When something breaks in a way that the framework's error messages don't explain clearly, you're stuck. When you need to write middleware, you're cargo-culting examples. When you're evaluating whether to use Sinatra or Roda or some other non-Rails framework, you're guessing.</p>
+<p>The Rack specification — which is what makes all of this work — is simple enough to explain completely in one chapter. The HTTP protocol that sits beneath it is simple enough to understand in an afternoon. Once you understand both, the entire ecosystem of Ruby web frameworks becomes readable rather than mysterious.</p>
+<h2 id="what-this-book-is"><a class="header" href="#what-this-book-is">What This Book Is</a></h2>
+<p>This book is about three things:</p>
+<ol>
+<li>
+<p><strong>Rack</strong>: The protocol that unifies Ruby web development. We'll read the spec, build apps against it directly, write our own server, and implement middleware from scratch.</p>
+</li>
+<li>
+<p><strong>Roda</strong>: A web framework that takes Rack seriously. Where Rails uses Rack as a compatibility layer (something your application sits on top of), Roda uses Rack as a foundation (something your application is built out of). The distinction matters.</p>
+</li>
+<li>
+<p><strong>The gap between them</strong>: What frameworks actually add, why those additions exist, and when you want them versus when you don't.</p>
+</li>
+</ol>
+<h2 id="what-this-book-is-not"><a class="header" href="#what-this-book-is-not">What This Book Is Not</a></h2>
+<p>This is not a Rails tutorial, a Sinatra tutorial, or a Roda tutorial in the conventional sense. There are plenty of those. This is a book about the layer beneath those frameworks, with enough framework coverage to make the comparison meaningful.</p>
+<p>This is also not a "write everything from scratch" manifesto. Frameworks exist because they solve real problems, and Roda is genuinely excellent at what it does. The goal isn't to convince you to abandon your tools; it's to make you fluent enough in the underlying mechanics that you can use your tools with full understanding of what they're doing.</p>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<p>You should know Ruby reasonably well — blocks, modules, objects, the basics of metaprogramming. You should have written at least one web application in Ruby, probably with Rails or Sinatra. You should be comfortable at the command line.</p>
+<p>You do not need to know anything about Rack, Roda, or HTTP internals. We'll cover all of that.</p>
+<h2 id="a-note-on-the-code"><a class="header" href="#a-note-on-the-code">A Note on the Code</a></h2>
+<p>Every code example in this book runs. If an example requires a gem, it says so. If it requires Ruby 3.x, it says so. The examples are not simplified pseudocode — they're actual Ruby that does actual things.</p>
+<p>The simplest Rack application in this book is nine lines. The server we build from scratch is about a hundred. Neither of these is a toy, even though neither is production-ready. They're instructive, which is more useful.</p>
+<p>Let's start by talking about what's actually happening on the wire.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+                            <a rel="next prefetch" href="http-is-just-text.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+                    <a rel="next prefetch" href="http-is-just-text.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
