@@ -1,0 +1,19 @@
+[book]
+title = "Rack, Roda, and Ruby"
+authors = ["CloudStreet"]
+description = "Rails is just a callable. Sinatra is just a callable. So is Roda. This book strips away the magic of Ruby web development, shows you exactly what Rack is doing under the hood, and teaches you to build from first principles. Know your tools. Really know them."
+language = "en"
+src = "src"
+
+[rust]
+edition = "2021"
+
+[build]
+build-dir = "book"
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/cloudstreet-dev/Rack-Roda-and-Ruby/edit/main/{path}"
